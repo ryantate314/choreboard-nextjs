@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { TaskDefinition } from "../models/taskDefinition";
+import { Status } from "@prisma/client";
 
-export default function TaskSearch({ taskDefinitions }: { taskDefinitions: TaskDefinition[] }) {
+export default function TaskSearch({ taskDefinitions, handleDragStart }: { taskDefinitions: TaskDefinition[], handleDragStart: (id: number, status: Status) => void }) {
   const [search, setSearch] = useState("");
   // Only non-recurring (one-off) task definitions
   const filtered = useMemo(() => {
@@ -19,7 +20,7 @@ export default function TaskSearch({ taskDefinitions }: { taskDefinitions: TaskD
       <ul className="flex flex-row gap-2">
         {filtered.length === 0 && <li className="text-gray-400">No matching tasks</li>}
         {filtered.map((t) => (
-          <li key={t.id} className="bg-surface-500 text-on-surface border rounded p-2">
+          <li key={t.id} className="bg-surface-500 text-on-surface border rounded p-2" draggable onDragStart={() => handleDragStart(t.id, t.status as Status)}>
             <div className="font-semibold">{t.name}</div>
           </li>
         ))}

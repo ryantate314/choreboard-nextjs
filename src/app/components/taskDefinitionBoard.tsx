@@ -1,36 +1,16 @@
 "use client";
 
-import { useRef, useState, useMemo } from "react";
-import { updateTaskDefinitionStatus, completeTaskDefinition } from "../actions";
 import { Status } from "@prisma/client";
-import { Sprint, TaskDefinition } from "../models/taskDefinition";
+import { Sprint } from "../models/taskDefinition";
 
-function TaskDefinitionBoard({ sprint }: { sprint: Sprint }) {
+export interface TaskDefinitionBoardProps {
+  sprint: Sprint;
+  handleDrop: (col: string) => void;
+  handleDragStart: (id: number, status: Status) => void;
+}
+
+function TaskDefinitionBoard({ sprint, handleDrop, handleDragStart }: TaskDefinitionBoardProps) {
   const { taskDefinitions, doneTasks } = sprint;
-  const dragTaskId = useRef<number | null>(null);
-  const dragTaskStatus = useRef<Status | null>(null);
-
-  const handleDragStart = (id: number, status: Status) => {
-    dragTaskId.current = id;
-    dragTaskStatus.current = status;
-  };
-
-  const handleDrop = async (col: string) => {
-    const id = dragTaskId.current;
-    const originalStatus = dragTaskStatus.current;
-    if (!id) return;
-    let targetStatus: Status | null = null;
-    if (col === "To Do This Week") targetStatus = Status.THIS_WEEK;
-    else if (col === "To Do Today") targetStatus = Status.TODAY;
-    else if (col === "Backlog") targetStatus = Status.BACKLOG;
-    if (col === "Done") {
-      await completeTaskDefinition(id);
-    } else if (targetStatus !== null && originalStatus !== targetStatus) {
-      await updateTaskDefinitionStatus(id, targetStatus);
-    }
-    dragTaskId.current = null;
-    dragTaskStatus.current = null;
-  };
 
   return (
     <div className="grid grid-cols-4 gap-4 w-full">
