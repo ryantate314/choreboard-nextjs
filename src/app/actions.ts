@@ -98,7 +98,21 @@ export async function completeTaskDefinition(id: number) {
   revalidatePath("/");
 }
 
-export async function getTaskDefinitionsAndDoneTasks() {
+function getMonday(date: Date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+  d.setDate(diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+export async function getTaskDefinitionsAndDoneTasks(searchParams?: { weekStart?: Date }) {
+  // Determine week start
+  const weekStart = searchParams?.weekStart ?? getMonday(new Date());
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 7);
+
   // Get all task definitions (with their most recent task)
   const definitions = await prisma.taskDefinition.findMany({
     include: {
@@ -107,25 +121,24 @@ export async function getTaskDefinitionsAndDoneTasks() {
         take: 1,
       },
     },
-  }).then(definitions => definitions.map(d => ({
-    id: d.id,
-    name: d.name,
-    description: d.description,
-    recurrence: d.recurrence,
-    createdAt: d.createdAt,
-    lastCompletedTask: d.Task[0] ?? null,
-    status: d.status,
-    nextInstanceDate: getNextInstanceDate(d as TaskDefinitionWithTasks),
+  }).then(taskDefinitions => taskDefinitions.map(t => ({
+    ...t,
+    lastCompletedTask: t.Task[0] ?? null,
   } satisfies TaskDefinition)));
 
-  // Get all completed tasks (with their definition)
+  // Get all completed tasks (with their definition) for the week
   const doneTasks = await prisma.task.findMany({
-    where: { completedAt: { not: null } },
+    where: {
+      completedAt: {
+        gte: weekStart,
+        lt: weekEnd,
+      },
+    },
     include: { taskDefinition: true },
     orderBy: { completedAt: "desc" },
-  }).then(tasks => tasks.map(task => ({
-    ...task,
-    completedAt: task.completedAt!,
+  }).then(tasks => tasks.map(t => ({
+    ...t,
+    completedAt: t.completedAt!
   })));
   return { definitions, doneTasks };
 }
