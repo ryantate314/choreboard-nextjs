@@ -97,3 +97,35 @@ export async function completeTaskDefinition(id: number) {
   });
   revalidatePath("/");
 }
+
+export async function getTaskDefinitionsAndDoneTasks() {
+  // Get all task definitions (with their most recent task)
+  const definitions = await prisma.taskDefinition.findMany({
+    include: {
+      Task: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+      },
+    },
+  }).then(definitions => definitions.map(d => ({
+    id: d.id,
+    name: d.name,
+    description: d.description,
+    recurrence: d.recurrence,
+    createdAt: d.createdAt,
+    lastCompletedTask: d.Task[0] ?? null,
+    status: d.status,
+    nextInstanceDate: getNextInstanceDate(d as TaskDefinitionWithTasks),
+  } satisfies TaskDefinition)));
+
+  // Get all completed tasks (with their definition)
+  const doneTasks = await prisma.task.findMany({
+    where: { completedAt: { not: null } },
+    include: { taskDefinition: true },
+    orderBy: { completedAt: "desc" },
+  }).then(tasks => tasks.map(task => ({
+    ...task,
+    completedAt: task.completedAt!,
+  })));
+  return { definitions, doneTasks };
+}
