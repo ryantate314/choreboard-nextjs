@@ -7,23 +7,28 @@ import { TaskDefinition } from "../models/taskDefinition";
 
 function TaskDefinitionBoard({ taskDefinitions }: { taskDefinitions: TaskDefinition[] }) {
   const dragTaskId = useRef<number | null>(null);
+  const dragTaskStatus = useRef<Status | null>(null);
 
-  const handleDragStart = (id: number) => {
+  const handleDragStart = (id: number, status: Status) => {
     dragTaskId.current = id;
+    dragTaskStatus.current = status;
   };
 
   const handleDrop = async (col: string) => {
     const id = dragTaskId.current;
+    const originalStatus = dragTaskStatus.current;
     if (!id) return;
+    let targetStatus: Status | null = null;
+    if (col === "To Do This Week") targetStatus = Status.THIS_WEEK;
+    else if (col === "To Do Today") targetStatus = Status.TODAY;
+    else if (col === "Backlog") targetStatus = Status.BACKLOG;
     if (col === "Done") {
       await completeTaskDefinition(id);
-    } else {
-      let status: Status = Status.BACKLOG;
-      if (col === "To Do This Week") status = Status.THIS_WEEK;
-      if (col === "To Do Today") status = Status.TODAY;
-      await updateTaskDefinitionStatus(id, status);
+    } else if (targetStatus !== null && originalStatus !== targetStatus) {
+      await updateTaskDefinitionStatus(id, targetStatus);
     }
     dragTaskId.current = null;
+    dragTaskStatus.current = null;
   };
 
   return (
@@ -50,7 +55,7 @@ function TaskDefinitionBoard({ taskDefinitions }: { taskDefinitions: TaskDefinit
                 key={def.id}
                 className="bg-surface-500 text-on-surface border rounded p-2"
                 draggable
-                onDragStart={() => handleDragStart(def.id)}
+                onDragStart={() => handleDragStart(def.id, def.status as Status)}
               >
                 <div className="font-semibold">{def.name}</div>
                 {def.description && <div className="text-sm">{def.description}</div>}
