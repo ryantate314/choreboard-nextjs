@@ -17,7 +17,7 @@ model TaskDefinition {
   recurrence String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  status      Status   @default(BACKLOG)
+  status      Status?  
 
   Task Task[]
 }

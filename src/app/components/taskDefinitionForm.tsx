@@ -37,7 +37,8 @@ export default function TaskDefinitionForm() {
           onChange={e => setRecurrence(e.target.value)}
         />
       </label>
-      <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded mt-2">Create Task Definition</button>
+      <a href="https://icalendar.org/rrule-tool.html" target="_blank" className="text-blue-500 underline">RRule Tool</a>
+      <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded mt-2 cursor-pointer">Create Task Definition</button>
     </form>
   );
 }

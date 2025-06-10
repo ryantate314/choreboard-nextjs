@@ -31,7 +31,7 @@ type TaskDefinitionWithTasks = Prisma.TaskDefinitionGetPayload<{
   include: typeof taskDefinitionWithTasks;
 }>;
 
-export async function getTaskDefinitions(): Promise<TaskDefinition[]> {
+export async function getTaskAllDefinitions(): Promise<TaskDefinition[]> {
   return await prisma.taskDefinition.findMany({
     include: {
       Task: {
@@ -42,13 +42,8 @@ export async function getTaskDefinitions(): Promise<TaskDefinition[]> {
       }
     }
   }).then(definitions => definitions.map(d => ({
-    id: d.id,
-    name: d.name,
-    description: d.description,
-    recurrence: d.recurrence,
-    createdAt: d.createdAt,
+    ...d,
     lastCompletedTask: d.Task[0] ?? null,
-    status: d.status,
     nextInstanceDate: getNextInstanceDate(d as TaskDefinitionWithTasks),
   } satisfies TaskDefinition)));
 }
@@ -93,7 +88,10 @@ export async function completeTaskDefinition(id: number) {
   // Set status back to BACKLOG
   await prisma.taskDefinition.update({
     where: { id },
-    data: { status: Status.BACKLOG },
+    data: {
+      // Set status to null for one-off tasks
+      status: taskDef.recurrence ? Status.BACKLOG : null
+    },
   });
   revalidatePath("/");
 }
@@ -107,7 +105,7 @@ function getMonday(date: Date) {
   return d;
 }
 
-export async function getTaskDefinitionsAndDoneTasks(searchParams?: { weekStart?: Date }) {
+export async function getSprint(searchParams?: { weekStart?: Date }) {
   // Determine week start
   const weekStart = searchParams?.weekStart ?? getMonday(new Date());
   const weekEnd = new Date(weekStart);
@@ -121,9 +119,16 @@ export async function getTaskDefinitionsAndDoneTasks(searchParams?: { weekStart?
         take: 1,
       },
     },
+    where: {
+      OR: [
+        { status: { not: null } }, // One-off tasks which have been assigned to a sprint
+        { recurrence: { not: null } }, // Recurring task
+      ]
+    }
   }).then(taskDefinitions => taskDefinitions.map(t => ({
     ...t,
     lastCompletedTask: t.Task[0] ?? null,
+    nextInstanceDate: getNextInstanceDate(t as TaskDefinitionWithTasks),
   } satisfies TaskDefinition)));
 
   // Get all completed tasks (with their definition) for the week

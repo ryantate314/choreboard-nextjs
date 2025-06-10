@@ -4,8 +4,8 @@ export interface TaskDefinition {
   description?: string | null;
   recurrence?: string | null;
   createdAt: Date;
-  status: string; // Add status property
-  lastCompletedTask?: unknown;
+  status: string | null;
+  lastCompletedTask?: Task | null;
   nextInstanceDate?: Date | null; // Optional, calculated from recurrence
 }
 

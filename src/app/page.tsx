@@ -1,13 +1,13 @@
 "use server";
 
 import { Suspense } from "react";
-import { getTaskDefinitionsAndDoneTasks } from "./actions";
+import { getSprint } from "./actions";
 import TaskDefinitionForm from "./components/taskDefinitionForm";
 import TaskDefinitionBoard from "./components/taskDefinitionBoard";
 
 export default async function Home({ searchParams }: { searchParams?: { weekStart?: string } } = {}) {
   const weekStart = searchParams?.weekStart;
-  const { definitions: taskDefinitions, doneTasks } = await getTaskDefinitionsAndDoneTasks({ weekStart: weekStart ? new Date(weekStart) : undefined });
+  const { definitions: taskDefinitions, doneTasks } = await getSprint({ weekStart: weekStart ? new Date(weekStart) : undefined });
 
   // Only pass doneTasks with a non-null completedAt, and cast completedAt as Date
   const filteredDoneTasks = doneTasks.filter((t) => t.completedAt !== null) as typeof doneTasks;
