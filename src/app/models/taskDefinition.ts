@@ -3,9 +3,10 @@ export interface TaskDefinition {
   name: string;
   description?: string | null;
   recurrence?: string | null;
-  lastCompletedTask: Task | null;
-  nextInstanceDate?: Date | null; // Optional, calculated from recurrence
   createdAt: Date;
+  status: string; // Add status property
+  lastCompletedTask?: unknown;
+  nextInstanceDate?: Date | null; // Optional, calculated from recurrence
 }
 
 export interface Task {

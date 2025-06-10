@@ -4,7 +4,7 @@ import { prisma } from "./prisma";
 import { revalidatePath } from "next/cache";
 import { RRule } from "rrule";
 import { TaskDefinition } from "./models/taskDefinition";
-import { Prisma } from "@prisma/client";
+import { Prisma, Status } from "@prisma/client";
 
 export async function createTaskDefinition(formData: FormData) {
   const name = formData.get("name") as string;
@@ -48,6 +48,7 @@ export async function getTaskDefinitions(): Promise<TaskDefinition[]> {
     recurrence: d.recurrence,
     createdAt: d.createdAt,
     lastCompletedTask: d.Task[0] ?? null,
+    status: d.status,
     nextInstanceDate: getNextInstanceDate(d as TaskDefinitionWithTasks),
   } satisfies TaskDefinition)));
 }
@@ -67,4 +68,32 @@ function getNextInstanceDate(taskDefinition: TaskDefinitionWithTasks): Date | nu
   if (!nextDate)
     throw new Error("No next instance found for recurrence rule");
   return nextDate;
+}
+
+export async function updateTaskDefinitionStatus(id: number, status: Status) {
+  "use server";
+  await prisma.taskDefinition.update({
+    where: { id },
+    data: { status },
+  });
+  revalidatePath("/");
+}
+
+export async function completeTaskDefinition(id: number) {
+  "use server";
+  // Create a new Task for this definition
+  const taskDef = await prisma.taskDefinition.findUnique({ where: { id } });
+  if (!taskDef) return;
+  await prisma.task.create({
+    data: {
+      taskDefinitionId: id,
+      completedAt: new Date(),
+    },
+  });
+  // Set status back to BACKLOG
+  await prisma.taskDefinition.update({
+    where: { id },
+    data: { status: Status.BACKLOG },
+  });
+  revalidatePath("/");
 }

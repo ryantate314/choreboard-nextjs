@@ -17,8 +17,15 @@ model TaskDefinition {
   recurrence String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  status      Status   @default(BACKLOG)
 
   Task Task[]
+}
+
+enum Status {
+  BACKLOG
+  THIS_WEEK
+  TODAY
 }
 
 model Task {
