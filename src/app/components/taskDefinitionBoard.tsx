@@ -1,17 +1,12 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState, useMemo } from "react";
 import { updateTaskDefinitionStatus, completeTaskDefinition } from "../actions";
 import { Status } from "@prisma/client";
-import { TaskDefinition } from "../models/taskDefinition";
+import { Sprint, TaskDefinition } from "../models/taskDefinition";
 
-interface DoneTask {
-  id: number;
-  completedAt: Date;
-  taskDefinition: { name: string };
-}
-
-function TaskDefinitionBoard({ taskDefinitions, doneTasks }: { taskDefinitions: TaskDefinition[]; doneTasks: DoneTask[] }) {
+function TaskDefinitionBoard({ sprint }: { sprint: Sprint }) {
+  const { taskDefinitions, doneTasks } = sprint;
   const dragTaskId = useRef<number | null>(null);
   const dragTaskStatus = useRef<Status | null>(null);
 
@@ -60,8 +55,8 @@ function TaskDefinitionBoard({ taskDefinitions, doneTasks }: { taskDefinitions: 
                     key={task.id}
                     className="bg-surface-500 text-on-surface border rounded p-2"
                   >
-                    <div className="font-semibold">{task.taskDefinition.name}</div>
-                    <div className="text-xs text-gray-400">Completed: {new Date(task.completedAt).toLocaleDateString()}</div>
+                    <div className="font-semibold">{task.taskDefinition!.name}</div>
+                    <div className="text-xs text-gray-400">Completed: {task.completedAt!.toLocaleDateString()}</div>
                   </div>
                 ))
               : taskDefinitions.filter(t => {
@@ -87,5 +82,6 @@ function TaskDefinitionBoard({ taskDefinitions, doneTasks }: { taskDefinitions: 
     </div>
   );
 }
+
 
 export default TaskDefinitionBoard;

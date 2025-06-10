@@ -12,6 +12,12 @@ export interface TaskDefinition {
 export interface Task {
   id: number;
   taskDefinitionId: number;
-  createdAt: Date;
-  completedAt?: Date | null;
+  taskDefinition?: TaskDefinition;
+  createdAt?: Date;
+  completedAt?: Date;
+}
+
+export interface Sprint {
+  taskDefinitions: TaskDefinition[];
+  doneTasks: Task[];
 }

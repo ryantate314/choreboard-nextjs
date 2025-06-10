@@ -3,7 +3,7 @@
 import { prisma } from "./prisma";
 import { revalidatePath } from "next/cache";
 import { RRule } from "rrule";
-import { TaskDefinition } from "./models/taskDefinition";
+import { Sprint, TaskDefinition } from "./models/taskDefinition";
 import { Prisma, Status } from "@prisma/client";
 
 export async function createTaskDefinition(formData: FormData) {
@@ -31,7 +31,7 @@ type TaskDefinitionWithTasks = Prisma.TaskDefinitionGetPayload<{
   include: typeof taskDefinitionWithTasks;
 }>;
 
-export async function getTaskAllDefinitions(): Promise<TaskDefinition[]> {
+export async function getAllTaskDefinitions(): Promise<TaskDefinition[]> {
   return await prisma.taskDefinition.findMany({
     include: {
       Task: {
@@ -105,7 +105,7 @@ function getMonday(date: Date) {
   return d;
 }
 
-export async function getSprint(searchParams?: { weekStart?: Date }) {
+export async function getSprint(searchParams?: { weekStart?: Date }): Promise<Sprint> {
   // Determine week start
   const weekStart = searchParams?.weekStart ?? getMonday(new Date());
   const weekEnd = new Date(weekStart);
@@ -145,5 +145,5 @@ export async function getSprint(searchParams?: { weekStart?: Date }) {
     ...t,
     completedAt: t.completedAt!
   })));
-  return { definitions, doneTasks };
+  return { taskDefinitions: definitions, doneTasks };
 }
