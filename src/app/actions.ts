@@ -65,8 +65,15 @@ function getNextInstanceDate(taskDefinition: TaskDefinitionWithTasks): Date | nu
   return nextDate;
 }
 
-export async function updateTaskDefinitionStatus(id: number, status: Status) {
+export async function updateTaskDefinitionStatus(id: number, status: Status | null) {
   "use server";
+  const definition = await prisma.taskDefinition.findUnique({ where: { id } });
+  if (!definition) return;
+
+  if (status === Status.BACKLOG && !definition.recurrence) {
+    status = null; // Set status to null for one-off tasks
+  }
+
   await prisma.taskDefinition.update({
     where: { id },
     data: { status },

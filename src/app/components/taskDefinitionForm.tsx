@@ -8,7 +8,7 @@ export default function TaskDefinitionForm() {
   const [recurrence, setRecurrence] = useState("");
 
   return (
-    <form action={createTaskDefinition} className="flex flex-col gap-2 border p-4 mb-4">
+    <form action={createTaskDefinition} className="flex flex-col gap-2 p-4 mb-4">
       <label>
         Name
         <input

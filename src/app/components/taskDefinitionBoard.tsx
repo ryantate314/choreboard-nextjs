@@ -17,7 +17,7 @@ function TaskDefinitionBoard({ sprint, handleDrop, handleDragStart }: TaskDefini
       {["Backlog", "To Do This Week", "To Do Today", "Done"].map((col) => (
         <div
           key={col}
-          className="bg-surface-500 rounded p-2 min-h-[200px]"
+          className="bg-surface-500 rounded p-2 min-h-[500px]"
           onDragOver={e => e.preventDefault()}
           onDrop={() => handleDrop(col)}
         >
@@ -47,7 +47,7 @@ function TaskDefinitionBoard({ sprint, handleDrop, handleDragStart }: TaskDefini
                 }).map((def) => (
                   <div
                     key={def.id}
-                    className="bg-surface-500 text-on-surface border rounded p-2"
+                    className="bg-surface-500 text-on-surface border rounded p-2 cursor-pointer"
                     draggable
                     onDragStart={() => handleDragStart(def.id, def.status as Status)}
                   >

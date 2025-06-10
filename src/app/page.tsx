@@ -2,7 +2,6 @@
 
 import { Suspense } from "react";
 import { getAllTaskDefinitions, getSprint } from "./actions";
-import TaskDefinitionForm from "./components/taskDefinitionForm";
 import TaskBoardContainer from "./components/taskBoardContainer";
 
 export default async function Home({ searchParams }: { searchParams?: { weekStart?: string } } = {}) {
@@ -13,11 +12,12 @@ export default async function Home({ searchParams }: { searchParams?: { weekStar
   // Only pass doneTasks with a non-null completedAt, and cast completedAt as Date
   // const filteredDoneTasks = doneTasks.filter((t) => t.completedAt !== null) as typeof doneTasks;
   return (
-    <div className="flex flex-col w-full max-w-5xl mx-auto">
-      <TaskDefinitionForm />
-      <Suspense fallback={<div>Loading...</div>}>
-        <TaskBoardContainer sprint={sprint} allTaskDefinitions={allTaskDefinitions} />
-      </Suspense>
+    <div className="p-4">
+      <div className="flex flex-col w-full max-w-5xl mx-auto">
+        <Suspense fallback={<div>Loading...</div>}>
+          <TaskBoardContainer sprint={sprint} allTaskDefinitions={allTaskDefinitions} />
+        </Suspense>
+      </div>
     </div>
   );
 }
