@@ -6,18 +6,30 @@ import { RRule } from "rrule";
 import { Sprint, TaskDefinition } from "./models/taskDefinition";
 import { Prisma, Status } from "@prisma/client";
 
-export async function createTaskDefinition(formData: FormData) {
+export async function saveTaskDefinition(formData: FormData) {
+  const id = formData.get("id") as string | undefined;
   const name = formData.get("name") as string;
   const description = formData.get("description") as string | undefined;
   const recurrence = formData.get("recurrence") as string | undefined;
   if (!name) return;
-  await prisma.taskDefinition.create({
-    data: {
-      name,
-      description: description || undefined,
-      recurrence: recurrence || undefined,
-    },
-  });
+  if (id) {
+    await prisma.taskDefinition.update({
+      where: { id: parseInt(id) },
+      data: {
+        name,
+        description: description || undefined,
+        recurrence: recurrence || undefined,
+      },
+    });
+  } else {
+    await prisma.taskDefinition.create({
+      data: {
+        name,
+        description: description || undefined,
+        recurrence: recurrence || undefined,
+      },
+    });
+  }
   revalidatePath("/");
 }
 
@@ -48,6 +60,14 @@ export async function getAllTaskDefinitions(): Promise<TaskDefinition[]> {
   } satisfies TaskDefinition)));
 }
 
+export async function deleteTask(id: number) {
+  "use server";
+  await prisma.task.delete({
+    where: { id },
+  });
+  revalidatePath("/");
+}
+
 function getNextInstanceDate(taskDefinition: TaskDefinitionWithTasks): Date | null {
   if (!taskDefinition.recurrence) return null;
   if (taskDefinition.Task.length === 0)
@@ -67,24 +87,45 @@ function getNextInstanceDate(taskDefinition: TaskDefinitionWithTasks): Date | nu
 
 export async function updateTaskDefinitionStatus(id: number, status: Status | null) {
   "use server";
-  const definition = await prisma.taskDefinition.findUnique({ where: { id } });
+  const definition = await getTaskDefinition(id);
   if (!definition) return;
 
-  if (status === Status.BACKLOG && !definition.recurrence) {
-    status = null; // Set status to null for one-off tasks
+  if (status === Status.DONE) {
+    await completeTaskDefinition(id);
   }
+  else {
+    if (status === Status.BACKLOG && !definition.recurrence) {
+      status = null; // Set status to null for one-off tasks
+    }
 
-  await prisma.taskDefinition.update({
-    where: { id },
-    data: { status },
-  });
+    await prisma.taskDefinition.update({
+      where: { id },
+      data: { status },
+    });
+  }
   revalidatePath("/");
+}
+
+async function getTaskDefinition(id: number): Promise<TaskDefinition | null> {
+  return await prisma.taskDefinition.findUnique({
+    where: { id },
+    include: {
+      Task: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+      },
+    },
+  }).then(definition => definition ? ({
+    ...definition,
+    lastCompletedTask: definition.Task[0] ?? null,
+    nextInstanceDate: getNextInstanceDate(definition as TaskDefinitionWithTasks),
+  } satisfies TaskDefinition) : null);
 }
 
 export async function completeTaskDefinition(id: number) {
   "use server";
   // Create a new Task for this definition
-  const taskDef = await prisma.taskDefinition.findUnique({ where: { id } });
+  const taskDef = await getTaskDefinition(id);
   if (!taskDef) return;
   await prisma.task.create({
     data: {
