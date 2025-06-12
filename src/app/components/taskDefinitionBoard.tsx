@@ -2,6 +2,7 @@
 
 import { Status } from "@prisma/client";
 import { Sprint, Task, TaskDefinition } from "../models/taskDefinition";
+import humanizeDuration from "humanize-duration";
 
 export interface TaskDefinitionBoardProps {
   sprint: Sprint;
@@ -12,6 +13,15 @@ export interface TaskDefinitionBoardProps {
 
 function TaskDefinitionBoard({ sprint, handleDrop, handleDragStart, openTaskModal }: TaskDefinitionBoardProps) {
   const { taskDefinitions, doneTasks } = sprint;
+
+  function formatDueDate(task: TaskDefinition): string {
+    const diff = task.nextInstanceDate!.getTime() - new Date().getTime();
+    const humanized = humanizeDuration(diff, {
+      units: ["mo", "d"],
+      round: true
+    });
+    return `${diff > 0 ? 'in ' : ''}${humanized}${diff < 0 ? 'ago' : ''}`;
+  }
 
   return (
     <>
@@ -57,7 +67,7 @@ function TaskDefinitionBoard({ sprint, handleDrop, handleDragStart, openTaskModa
                     >
                       <div className="font-semibold">{def.name}</div>
                       {def.description && <div className="text-sm">{def.description}</div>}
-                      {def.nextInstanceDate && <div>{def.nextInstanceDate.toLocaleDateString()}</div>}
+                      {def.nextInstanceDate && <div title={def.nextInstanceDate.toLocaleDateString()}>{formatDueDate(def)}</div>}
                     </div>
                   ))}
             </div>

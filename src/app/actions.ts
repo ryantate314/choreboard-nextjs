@@ -52,6 +52,9 @@ export async function getAllTaskDefinitions(): Promise<TaskDefinition[]> {
         },
         take: 1, // Get the most recent task for each definition
       }
+    },
+    where: {
+      deletedAt: null,
     }
   }).then(definitions => definitions.map(d => ({
     ...d,
@@ -194,4 +197,15 @@ export async function getSprint(searchParams?: { weekStart?: Date }): Promise<Sp
     completedAt: t.completedAt!
   })));
   return { taskDefinitions: definitions, doneTasks };
+}
+
+export async function deleteTaskDefinition(id: number) {
+  "use server";
+  await prisma.taskDefinition.update({
+    where: { id },
+    data: {
+      deletedAt: new Date(),
+    },
+  });
+  revalidatePath("/");
 }
