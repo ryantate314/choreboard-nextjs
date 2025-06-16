@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { deleteTaskDefinition, saveTaskDefinition } from "../actions";
+import { saveTaskDefinition } from "../actions";
 import { TaskDefinition } from "../models/taskDefinition";
 
 export default function TaskDefinitionForm({ definition, closeModal }: { definition?: TaskDefinition, closeModal: () => void }) {

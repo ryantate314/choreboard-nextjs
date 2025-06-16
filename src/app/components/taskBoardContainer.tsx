@@ -5,7 +5,7 @@ import { Sprint, Task, TaskDefinition } from "../models/taskDefinition";
 import TaskDefinitionBoard from "./taskDefinitionBoard";
 import TaskSearch from "./taskSearch";
 import { Status } from "@prisma/client";
-import { completeTaskDefinition, updateTaskDefinitionStatus } from "../actions";
+import { updateTaskDefinitionStatus } from "../actions";
 import TaskModal from "./taskModal";
 import TaskDefinitionForm from "./taskDefinitionForm";
 

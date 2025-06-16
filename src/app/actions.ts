@@ -34,6 +34,7 @@ export async function saveTaskDefinition(formData: FormData) {
 }
 
 // Define the query shape
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const taskDefinitionWithTasks = Prisma.validator<Prisma.TaskDefinitionInclude>()({
   Task: true,
 });

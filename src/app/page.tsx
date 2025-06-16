@@ -4,8 +4,10 @@ import { Suspense } from "react";
 import { getAllTaskDefinitions, getSprint } from "./actions";
 import TaskBoardContainer from "./components/taskBoardContainer";
 
-export default async function Home({ searchParams }: { searchParams?: { weekStart?: string } } = {}) {
-  const weekStart = (await searchParams)?.weekStart;
+type Params = Promise<{ weekStart?: string }>;
+
+export default async function Home({ searchParams }: { searchParams: Params }) {
+  const weekStart = (await searchParams).weekStart;
   const sprint = await getSprint({ weekStart: weekStart ? new Date(weekStart) : undefined });
   const allTaskDefinitions = await getAllTaskDefinitions();
 
