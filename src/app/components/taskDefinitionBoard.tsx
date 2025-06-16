@@ -2,7 +2,7 @@
 
 import { Status } from "@prisma/client";
 import { Sprint, Task, TaskDefinition } from "../models/taskDefinition";
-import humanizeDuration from "humanize-duration";
+import { formatDueDate } from "../dateUtils";
 
 export interface TaskDefinitionBoardProps {
   sprint: Sprint;
@@ -14,13 +14,10 @@ export interface TaskDefinitionBoardProps {
 function TaskDefinitionBoard({ sprint, handleDrop, handleDragStart, openTaskModal }: TaskDefinitionBoardProps) {
   const { taskDefinitions, doneTasks } = sprint;
 
-  function formatDueDate(task: TaskDefinition): string {
-    const diff = task.nextInstanceDate!.getTime() - new Date().getTime();
-    const humanized = humanizeDuration(diff, {
-      units: ["mo", "d"],
-      round: true
-    });
-    return `${diff > 0 ? 'in ' : ''}${humanized}${diff < 0 ? 'ago' : ''}`;
+  function compareNextInstanceDate(a: TaskDefinition, b: TaskDefinition): number {
+    const aTime = a.nextInstanceDate?.getTime() ?? 0;
+    const bTime = b.nextInstanceDate?.getTime() ?? 0;
+    return aTime - bTime;
   }
 
   return (
@@ -57,7 +54,9 @@ function TaskDefinitionBoard({ sprint, handleDrop, handleDragStart, openTaskModa
                     if (col === "To Do This Week") return t.status === Status.THIS_WEEK;
                     if (col === "To Do Today") return t.status === Status.TODAY;
                     return false;
-                  }).map((def) => (
+                  })
+                  .sort(compareNextInstanceDate)
+                  .map((def) => (
                     <div
                       key={def.id}
                       className="bg-surface-500 text-on-surface border rounded p-2 cursor-pointer"

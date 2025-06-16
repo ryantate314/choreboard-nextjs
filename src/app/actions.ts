@@ -76,9 +76,12 @@ function getNextInstanceDate(taskDefinition: TaskDefinitionWithTasks): Date | nu
   if (taskDefinition.Task.length === 0)
     return taskDefinition.createdAt;
 
-  const rule = RRule.fromString(taskDefinition.recurrence);
   let nextDate;
-  rule.options.dtstart = taskDefinition.Task[0]?.createdAt;
+  const options = RRule.parseString(taskDefinition.recurrence);
+  const rule = new RRule({
+    ...options,
+    dtstart: taskDefinition.Task[0]?.completedAt,
+  });
   rule.all((d, len) => {
     nextDate = d;
     return len < 1; // Stop after finding the first future date
