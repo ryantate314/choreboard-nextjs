@@ -1,0 +1,40 @@
+// This is your Prisma schema file.
+// Learn more about it with the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model TaskDefinition {
+  id         Int      @id @default(autoincrement())
+  name        String
+  description String?
+  recurrence String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  status      Status?
+  deletedAt  DateTime?
+
+  Task Task[]
+}
+
+enum Status {
+  BACKLOG
+  THIS_WEEK
+  TODAY
+  DONE // Only used for API calls, not stored in the database
+}
+
+model Task {
+  id              Int              @id @default(autoincrement())
+  taskDefinition TaskDefinition   @relation(fields: [taskDefinitionId], references: [id])
+  taskDefinitionId Int
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  completedAt     DateTime
+}
