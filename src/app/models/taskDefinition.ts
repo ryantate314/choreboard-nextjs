@@ -1,7 +1,11 @@
 import { Status } from "@prisma/client";
 
-export interface TaskDefinition {
+interface TaskBase {
   id: number;
+}
+
+export interface TaskDefinition extends TaskBase {
+  type: 'definition';
   name: string;
   description?: string | null;
   recurrence?: string | null;
@@ -11,13 +15,15 @@ export interface TaskDefinition {
   nextInstanceDate?: Date | null; // Optional, calculated from recurrence
 }
 
-export interface Task {
-  id: number;
+export interface Task extends TaskBase {
+  type: 'task';
   taskDefinitionId: number;
   taskDefinition?: TaskDefinition;
   createdAt?: Date;
   completedAt?: Date;
 }
+
+export type AllTasks = TaskDefinition | Task;
 
 export interface Sprint {
   taskDefinitions: TaskDefinition[];

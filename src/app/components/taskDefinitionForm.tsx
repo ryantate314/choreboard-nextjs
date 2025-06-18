@@ -1,12 +1,17 @@
 "use client";
 import { useState } from "react";
-import { saveTaskDefinition } from "../actions";
+import { deleteTaskDefinition, saveTaskDefinition } from "../actions";
 import { TaskDefinition } from "../models/taskDefinition";
 
 export default function TaskDefinitionForm({ definition, closeModal }: { definition?: TaskDefinition, closeModal: () => void }) {
   const [name, setName] = useState(definition?.name || "");
   const [description, setDescription] = useState(definition?.description || "");
   const [recurrence, setRecurrence] = useState(definition?.recurrence || "");
+
+  async function doDelete() {
+    await deleteTaskDefinition(definition!.id);
+    closeModal();
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -51,6 +56,7 @@ export default function TaskDefinitionForm({ definition, closeModal }: { definit
           </label>
           <a href="https://icalendar.org/rrule-tool.html" target="_blank" className="text-blue-500 underline">RRule Tool</a>
           <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded mt-2 cursor-pointer">Save Task Definition</button>
+          { definition && <button type="button" className="bg-red-500 text-white px-4 py-2 rounded mt-2 cursor-pointer" onClick={doDelete}>Delete Task Definition</button> }
         </form>
       </div>
     </div>
