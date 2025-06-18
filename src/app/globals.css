@@ -1,10 +1,5 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -13,21 +8,21 @@
 }
 
 @theme {
-  --color-surface-500: #1f1f1f;
+  --color-surface-950: #0c2327;
+  --color-surface-900: #1c3b3f;
+  --color-surface-800: #1f4a50;
+  --color-surface-700: #225c63;
+  --color-surface-600: #26737b;
   --color-on-surface: white;
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-primary-500: #4e7e8c;
+  --color-primary-600: #436977;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  color: #fdfdfd;
   font-family: Arial, Helvetica, sans-serif;
+  height: 100vh;
 }
 
 button {

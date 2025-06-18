@@ -55,7 +55,7 @@ export default function TaskModal({ task, closeModal, showEditTaskModal }: TaskM
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-surface-500 rounded shadow-lg p-6 min-w-[350px] relative border border-white">
+      <div className="bg-surface-950 rounded shadow-lg p-6 min-w-[350px] relative border border-white">
         <button
           className="absolute top-2 right-2 text-on-surface hover:text-gray-700 text-xl"
           onClick={closeModal}

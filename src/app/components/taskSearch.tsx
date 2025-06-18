@@ -70,7 +70,7 @@ export default function TaskSearch({ taskDefinitions, handleDragStart, openTaskM
           onChange={e => setSearch(e.target.value)}
         />
         <button
-          className="ml-2 bg-blue-500 text-on-surface px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+          className="ml-2 bg-primary-500 text-on-surface px-4 py-2 rounded hover:bg-primary-600 transition-colors"
           onClick={() => setShowModal(true)}
           type="button"
         >

@@ -59,7 +59,7 @@ export default function TaskBoardContainer({ sprint, allTaskDefinitions }: TaskB
   return (<>
     <TaskSearch taskDefinitions={allTaskDefinitions} handleDragStart={handleDragStart} openTaskModal={openTaskModal} />
     <TaskDefinitionBoard sprint={sprint} handleDragStart={handleDragStart} handleDrop={handleDrop} openTaskModal={openTaskModal} />
-    {taskModalValue && <TaskModal task={taskModalValue} closeModal={closeModal} type={taskModalType!} showEditTaskModal={doShowEditTaskModal} />}
+    {taskModalValue && <TaskModal task={taskModalValue} closeModal={closeModal} showEditTaskModal={doShowEditTaskModal} />}
     {showEditTaskModal && <TaskDefinitionForm definition={editTaskModalTask!} closeModal={() => setShowEditTaskModal(false)} />}
   </>);
 }
