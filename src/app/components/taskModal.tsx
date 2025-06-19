@@ -2,7 +2,7 @@
 
 import { Status } from "@prisma/client";
 import { AllTasks, Task, TaskDefinition } from "../models/taskDefinition";
-import { deleteTask, deleteTaskDefinition, updateTaskDefinitionStatus } from "../actions";
+import { deleteTask, updateTaskDefinitionStatus } from "../actions";
 import { useEffect } from "react";
 import { RRule } from "rrule";
 import { formatDueDate } from "../dateUtils";

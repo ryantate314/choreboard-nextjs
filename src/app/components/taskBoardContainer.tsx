@@ -36,18 +36,15 @@ export default function TaskBoardContainer({ sprint, allTaskDefinitions }: TaskB
   };
 
   const [taskModalValue, setTaskModalValue] = useState<Task | TaskDefinition | null>(null);
-  const [taskModalType, setTaskModalType] = useState<'task' | 'taskDefinition' | null>(null);
 
   const [showEditTaskModal, setShowEditTaskModal] = useState(false);
   const [editTaskModalTask, setEditTaskModalTask] = useState<TaskDefinition | null>(null);
 
-  const openTaskModal = (task: Task | TaskDefinition, type: 'task' | 'taskDefinition') => {
+  const openTaskModal = (task: Task | TaskDefinition) => {
     setTaskModalValue(task);
-    setTaskModalType(type);
   };
   const closeModal = () => {
     setTaskModalValue(null);
-    setTaskModalType(null);
   };
 
   const doShowEditTaskModal = (task: TaskDefinition) => {

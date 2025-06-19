@@ -8,7 +8,7 @@ export interface TaskDefinitionBoardProps {
   sprint: Sprint;
   handleDrop: (col: string) => void;
   handleDragStart: (id: number, status: Status) => void;
-  openTaskModal: (task: Task | TaskDefinition, type: 'task' | 'taskDefinition') => void;
+  openTaskModal: (task: Task | TaskDefinition) => void;
 }
 
 function TaskDefinitionBoard({ sprint, handleDrop, handleDragStart, openTaskModal }: TaskDefinitionBoardProps) {
@@ -43,7 +43,7 @@ function TaskDefinitionBoard({ sprint, handleDrop, handleDragStart, openTaskModa
                     <div
                       key={task.id}
                       className="text-on-surface border rounded p-2 cursor-pointer"
-                      onClick={() => openTaskModal(task, "task")}
+                      onClick={() => openTaskModal(task)}
                     >
                       <div className="font-semibold">{task.taskDefinition!.name}</div>
                       <div className="text-xs text-gray-400">Completed: {task.completedAt!.toLocaleDateString()}</div>
@@ -62,7 +62,7 @@ function TaskDefinitionBoard({ sprint, handleDrop, handleDragStart, openTaskModa
                       className="bg-surface-800 text-on-surface border rounded p-2 cursor-pointer"
                       draggable
                       onDragStart={() => handleDragStart(def.id, def.status as Status)}
-                      onClick={() => openTaskModal(def, "taskDefinition")}
+                      onClick={() => openTaskModal(def)}
                     >
                       <div className="font-semibold">{def.name}</div>
                       {def.description && <div className="text-sm">{def.description}</div>}

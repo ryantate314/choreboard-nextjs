@@ -28,7 +28,7 @@ function SearchResults({ results, showTaskModal }: { results: TaskDefinition[], 
 export interface TaskSearchProps {
   taskDefinitions: TaskDefinition[];
   handleDragStart: (id: number, status: Status) => void;
-  openTaskModal: (task: Task | TaskDefinition, type: 'task' | 'taskDefinition') => void;
+  openTaskModal: (task: Task | TaskDefinition) => void;
 }
 
 export default function TaskSearch({ taskDefinitions, handleDragStart, openTaskModal }: TaskSearchProps) {
@@ -50,7 +50,7 @@ export default function TaskSearch({ taskDefinitions, handleDragStart, openTaskM
   }, [taskDefinitions, search]);
 
   function showTaskModal(task: TaskDefinition) {
-    openTaskModal(task, 'taskDefinition');
+    openTaskModal(task);
   }
 
   return (
