@@ -6,6 +6,10 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci
 
+# Build ORM database model assets
+COPY prisma/schema.prisma ./prisma/
+RUN npx prisma generate
+
 # Copy the rest of the app
 COPY . .
 
@@ -19,14 +23,13 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # Copy built app and node_modules from builder
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 # COPY --from=builder /app/public ./public
+
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/next.config.ts ./next.config.ts
-# COPY --from=builder /app/src ./src
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
 EXPOSE 3000
 
-CMD npx prisma migrate deploy && npm start
+CMD npx prisma migrate deploy && node server.js
