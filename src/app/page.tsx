@@ -13,7 +13,7 @@ export default async function Home({ searchParams }: { searchParams: Params }) {
 
 
   return (
-    <div className="p-4">
+    <div className="p-4 bg-surface-950 h-full">
       <div className="flex flex-col w-full max-w-5xl mx-auto">
         <Suspense fallback={<div>Loading...</div>}>
           <TaskBoardContainer sprint={sprint} allTaskDefinitions={allTaskDefinitions} />

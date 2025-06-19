@@ -1,19 +1,18 @@
 "use client";
 
 import { Status } from "@prisma/client";
-import { Task, TaskDefinition } from "../models/taskDefinition";
+import { AllTasks, Task, TaskDefinition } from "../models/taskDefinition";
 import { deleteTask, deleteTaskDefinition, updateTaskDefinitionStatus } from "../actions";
 import { useEffect } from "react";
 import { RRule } from "rrule";
 import { formatDueDate } from "../dateUtils";
 
 export interface TaskModalProps {
-  task: Task | TaskDefinition;
+  task: AllTasks;
   closeModal: () => void;
-  type: 'task' | 'taskDefinition' ;
   showEditTaskModal: (task: TaskDefinition) => void;
 }
-export default function TaskModal({ task, closeModal, type, showEditTaskModal }: TaskModalProps) {
+export default function TaskModal({ task, closeModal, showEditTaskModal }: TaskModalProps) {
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") closeModal();
@@ -22,19 +21,19 @@ export default function TaskModal({ task, closeModal, type, showEditTaskModal }:
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [closeModal]);
 
-  const taskDefinition: TaskDefinition = type === 'taskDefinition'
+  const taskDefinition: TaskDefinition = task.type === 'definition'
     ? (task as TaskDefinition)
     : (task as Task).taskDefinition!;
 
   const name = taskDefinition.name;
   const description = taskDefinition.description;
   const currentStatus =
-    type === 'taskDefinition'
+    task.type === 'definition'
       ? (task as TaskDefinition).status
       : Status.DONE;
 
-  async function updateStatus(status: Status) {
-    if (type === 'task') {
+  async function updateStatus(status: Status | null) {
+    if (task.type === 'task') {
       await deleteTask(task.id);
       await updateTaskDefinitionStatus((task as Task).taskDefinition!.id, status);
       closeModal();
@@ -50,18 +49,13 @@ export default function TaskModal({ task, closeModal, type, showEditTaskModal }:
     closeModal();
   }
 
-  async function doDelete() {
-    await deleteTaskDefinition(taskDefinition.id);
-    closeModal();
-  }
-
   function recurrenceString() {
     return taskDefinition.recurrence ? RRule.fromString(taskDefinition.recurrence).toText() : null;
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-surface-500 rounded shadow-lg p-6 min-w-[350px] relative border border-white">
+      <div className="bg-surface-950 rounded shadow-lg p-6 min-w-[350px] relative border border-white">
         <button
           className="absolute top-2 right-2 text-on-surface hover:text-gray-700 text-xl"
           onClick={closeModal}
@@ -92,10 +86,12 @@ export default function TaskModal({ task, closeModal, type, showEditTaskModal }:
             ))
           }
           <button className="bg-yellow-500 py-2 text-lg rounded" onClick={() => showEditTaskModal(taskDefinition)}>Edit</button>
-          { currentStatus === Status.DONE && (
-            <button className="bg-red-500 text-white text-lg py-2 rounded" onClick={() => deleteTaskClick()}>Delete Completed Task</button>
-          )}
-          { <button type="button" className="bg-red-500 text-white px-4 py-2 rounded mt-2 cursor-pointer" onClick={doDelete}>Delete Task Definition</button> }
+          { taskDefinition.recurrence && currentStatus === Status.DONE &&
+            <button className="bg-red-500 text-white text-lg py-2 rounded" onClick={() => deleteTaskClick()}>Delete Task</button>
+          }
+          { !taskDefinition.recurrence &&
+            <button className="bg-red-500 text-white text-lg py-2 rounded" onClick={() => updateStatus(null)}>Delete Task</button>
+          }
         </div>
       </div>
     </div>

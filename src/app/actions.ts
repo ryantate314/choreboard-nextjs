@@ -3,8 +3,8 @@
 import { prisma } from "./prisma";
 import { revalidatePath } from "next/cache";
 import { RRule } from "rrule";
-import { Sprint, TaskDefinition } from "./models/taskDefinition";
-import { Prisma, Status } from "@prisma/client";
+import { Sprint, Task, TaskDefinition } from "./models/taskDefinition";
+import { Prisma, Status, Task as DataTask } from "@prisma/client";
 
 export async function saveTaskDefinition(formData: FormData) {
   const id = formData.get("id") as string | undefined;
@@ -57,11 +57,25 @@ export async function getAllTaskDefinitions(): Promise<TaskDefinition[]> {
     where: {
       deletedAt: null,
     }
-  }).then(definitions => definitions.map(d => ({
-    ...d,
-    lastCompletedTask: d.Task[0] ?? null,
-    nextInstanceDate: getNextInstanceDate(d as TaskDefinitionWithTasks),
-  } satisfies TaskDefinition)));
+  }).then(definitions => definitions.map(d => mapTaskDefinition(d)));
+}
+
+function mapTaskDefinition(definition: TaskDefinitionWithTasks): TaskDefinition {
+  return {
+    ...definition,
+    type: 'definition',
+    lastCompletedTask: mapTask(definition.Task[0]),
+    nextInstanceDate: getNextInstanceDate(definition),
+  };
+}
+
+function mapTask(task: DataTask | null): Task | null {
+  if (task)
+    return {
+      ...task,
+      type: 'task'
+    }
+  return null;
 }
 
 export async function deleteTask(id: number) {
@@ -101,10 +115,6 @@ export async function updateTaskDefinitionStatus(id: number, status: Status | nu
     await completeTaskDefinition(id);
   }
   else {
-    if (status === Status.BACKLOG && !definition.recurrence) {
-      status = null; // Set status to null for one-off tasks
-    }
-
     await prisma.taskDefinition.update({
       where: { id },
       data: { status },
@@ -122,11 +132,7 @@ async function getTaskDefinition(id: number): Promise<TaskDefinition | null> {
         take: 1,
       },
     },
-  }).then(definition => definition ? ({
-    ...definition,
-    lastCompletedTask: definition.Task[0] ?? null,
-    nextInstanceDate: getNextInstanceDate(definition as TaskDefinitionWithTasks),
-  } satisfies TaskDefinition) : null);
+  }).then(definition => definition ? mapTaskDefinition(definition) : null)
 }
 
 export async function completeTaskDefinition(id: number) {
@@ -180,11 +186,7 @@ export async function getSprint(searchParams?: { weekStart?: Date }): Promise<Sp
         { recurrence: { not: null } }, // Recurring task
       ]
     }
-  }).then(taskDefinitions => taskDefinitions.map(t => ({
-    ...t,
-    lastCompletedTask: t.Task[0] ?? null,
-    nextInstanceDate: getNextInstanceDate(t as TaskDefinitionWithTasks),
-  } satisfies TaskDefinition)));
+  }).then(taskDefinitions => taskDefinitions.map(t => mapTaskDefinition(t)));
 
   // Get all completed tasks (with their definition) for the week
   const doneTasks = await prisma.task.findMany({
@@ -196,10 +198,8 @@ export async function getSprint(searchParams?: { weekStart?: Date }): Promise<Sp
     },
     include: { taskDefinition: true },
     orderBy: { completedAt: "desc" },
-  }).then(tasks => tasks.map(t => ({
-    ...t,
-    completedAt: t.completedAt!
-  })));
+  }).then(tasks => tasks.map(task => mapTask(task)!));
+
   return { taskDefinitions: definitions, doneTasks };
 }
 
