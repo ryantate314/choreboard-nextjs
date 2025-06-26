@@ -5,7 +5,13 @@ import { Task, TaskDefinition } from "../models/taskDefinition";
 import { Status } from "@prisma/client";
 import TaskDefinitionForm from "./taskDefinitionForm";
 
-function SearchResults({ results, showTaskModal }: { results: TaskDefinition[], showTaskModal: (task: TaskDefinition) => void }) {
+interface SearchResultsProps {
+  results: TaskDefinition[];
+  showTaskModal: (task: TaskDefinition) => void;
+  handleDragStart: (id: number, status: Status) => void;
+}
+
+function SearchResults({ results, showTaskModal, handleDragStart }: SearchResultsProps) {
   return (
     <div className="flex flex-row gap-2">
       {results.length === 0 && <div className="text-gray-400">No matching tasks</div>}
@@ -14,6 +20,8 @@ function SearchResults({ results, showTaskModal }: { results: TaskDefinition[], 
           key={t.id}
           className="bg-surface-500 text-on-surface border rounded p-2 cursor-pointer"
           onClick={() => showTaskModal(t)}
+          draggable
+          onDragStart={() => handleDragStart(t.id, t.status as Status)}
         >
           <div className="font-semibold">{t.name}</div>
           { t.description && <div className="text-xs">{t.description}</div> }
@@ -53,37 +61,59 @@ export default function TaskSearch({ taskDefinitions, handleDragStart, openTaskM
     openTaskModal(task);
   }
 
+  function onCreateTaskModalClosed(result?: TaskDefinition) {
+    setShowModal(false);
+    // If the task was created, open the task modal.
+    if (result)
+      openTaskModal(result);
+  }
+
   return (
     <div className="search-form">
-      <div className="mb-6 flex flex-row gap-4 items-center">
+      <div className="mb-6 flex flex-row gap-4 items-center justify-between">
         <ul className="flex flex-row gap-2">
           {!search && recentTasks.map((t) => (
-            <li key={t.id} className="bg-surface-500 text-on-surface border rounded p-2 cursor-pointer" draggable onDragStart={() => handleDragStart(t.id, t.status as Status)} onClick={() => showTaskModal(t)}>
+            <li key={t.id}
+              className="bg-surface-500 text-on-surface border rouaded p-2 cursor-pointer"
+              draggable
+              onDragStart={() => handleDragStart(t.id, t.status as Status)}
+              onClick={() => showTaskModal(t)}
+            >
               <div className="font-semibold">{t.name}</div>
             </li>
           ))}
         </ul>
-        <input
-          className="border ml-auto px-2 py-1 rounded"
-          placeholder="Search by name..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
-        <button
-          className="ml-2 bg-primary-500 text-on-surface px-4 py-2 rounded hover:bg-primary-600 transition-colors"
-          onClick={() => setShowModal(true)}
-          type="button"
-        >
-          + New Task
-        </button>
+        <div className="flex flex-row gap-1">
+          <input
+            className="border ml-auto px-2 py-1 rounded"
+            placeholder="Search by name..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+          { search && 
+            <button
+              onClick={(() => setSearch(""))}
+              className="bg-primary-500 px-4 py-2 rounded"
+            >
+              &times;
+            </button>
+          }
+          <button
+            className="bg-primary-500 text-on-surface px-4 py-2 rounded hover:bg-primary-600 transition-colors"
+            onClick={() => setShowModal(true)}
+            type="button"
+          >
+            + New Task
+          </button>
+        </div>
         {showModal && (
-          <TaskDefinitionForm closeModal={() => setShowModal(false)}/>
+          <TaskDefinitionForm closeModal={onCreateTaskModalClosed}/>
         )}
       </div>
       { search && (
         <div className="mb-4">
-          <SearchResults results={filtered} showTaskModal={showTaskModal} />
-          </div>
+          <SearchResults results={filtered} showTaskModal={showTaskModal} handleDragStart={handleDragStart} />
+        </div>
       )}
     </div>
   );

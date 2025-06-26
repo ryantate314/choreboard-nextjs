@@ -12,25 +12,34 @@ export async function saveTaskDefinition(formData: FormData) {
   const description = formData.get("description") as string | undefined;
   const recurrence = formData.get("recurrence") as string | undefined;
   if (!name) return;
+  let result: TaskDefinitionWithTasks;
   if (id) {
-    await prisma.taskDefinition.update({
+    result = await prisma.taskDefinition.update({
       where: { id: parseInt(id) },
       data: {
         name,
         description: description || undefined,
         recurrence: recurrence || undefined,
       },
+      include: {
+        Task: true
+      }
     });
   } else {
-    await prisma.taskDefinition.create({
+    result = await prisma.taskDefinition.create({
       data: {
         name,
         description: description || undefined,
         recurrence: recurrence || undefined,
+        status: recurrence ? Status.BACKLOG : null,
       },
+      include: {
+        Task: true
+      }
     });
   }
   revalidatePath("/");
+  return mapTaskDefinition(result);
 }
 
 // Define the query shape

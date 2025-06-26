@@ -89,7 +89,7 @@ export default function TaskModal({ task, closeModal, showEditTaskModal }: TaskM
           { taskDefinition.recurrence && currentStatus === Status.DONE &&
             <button className="bg-red-500 text-white text-lg py-2 rounded" onClick={() => deleteTaskClick()}>Delete Task</button>
           }
-          { !taskDefinition.recurrence &&
+          { !taskDefinition.recurrence && taskDefinition.status &&
             <button className="bg-red-500 text-white text-lg py-2 rounded" onClick={() => updateStatus(null)}>Delete Task</button>
           }
         </div>
