@@ -9,5 +9,5 @@ import { TaskDefinition } from "./models/taskDefinition";
       units: ["mo", "d"],
       round: true
     });
-    return `${diff > 0 ? 'in ' : ''}${humanized}${diff < 0 ? 'ago' : ''}`;
+    return `${diff > 0 ? 'in ' : ''}${humanized}${diff < 0 ? ' ago' : ''}`;
   }
