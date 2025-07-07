@@ -26,7 +26,7 @@ function TaskDefinitionBoard({ sprint, handleDrop, handleDragStart, openTaskModa
         {["Backlog", "To Do This Week", "To Do Today", "Done"].map((col) => (
           <div
             key={col}
-            className="bg-surface-800 rounded p-2 grow min-h-[500px] min-w-[150px]"
+            className="bg-surface-800 rounded p-2 grow basis-1 min-h-[500px] min-w-[150px]"
             onDragOver={e => e.preventDefault()}
             onDrop={() => handleDrop(col)}
           >

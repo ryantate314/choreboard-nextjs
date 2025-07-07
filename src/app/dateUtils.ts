@@ -31,3 +31,7 @@ function isSameDay(a: Date, b: Date) : boolean {
     && a.getMonth() == b.getMonth()
     && a.getDate() == b.getDate();
 }
+
+export function addDays(date: Date, n: number) {
+  return new Date(date.getTime() + (n * 24*60*60*1000));
+}

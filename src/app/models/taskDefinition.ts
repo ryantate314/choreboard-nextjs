@@ -26,6 +26,7 @@ export interface Task extends TaskBase {
 export type AllTasks = TaskDefinition | Task;
 
 export interface Sprint {
+  start: Date;
   taskDefinitions: TaskDefinition[];
   doneTasks: Task[];
 }

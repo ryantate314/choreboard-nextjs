@@ -193,7 +193,7 @@ function getMonday(date: Date) {
 
 export async function getSprint(searchParams?: { weekStart?: Date }): Promise<Sprint> {
   // Determine week start
-  const weekStart = searchParams?.weekStart ?? getMonday(new Date());
+  const weekStart = searchParams?.weekStart ? getMonday(searchParams.weekStart) : getMonday(new Date());
   const weekEnd = new Date(weekStart);
   weekEnd.setDate(weekStart.getDate() + 7);
 
@@ -225,7 +225,11 @@ export async function getSprint(searchParams?: { weekStart?: Date }): Promise<Sp
     orderBy: { completedAt: "desc" },
   }).then(tasks => tasks.map(task => mapTask(task)!));
 
-  return { taskDefinitions: definitions, doneTasks };
+  return {
+    start: weekStart,
+    taskDefinitions: definitions,
+    doneTasks
+  };
 }
 
 export async function deleteTaskDefinition(id: number) {

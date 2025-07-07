@@ -67,8 +67,9 @@ export default function TaskSearch({ taskDefinitions, handleDragStart, openTaskM
       openTaskModal(result);
   }
 
+
   return (
-    <div className="search-form">
+    <div className="search-form relative">
       <div className="mb-6 flex flex-col-reverse gap-4 justify-between lg:flex-row lg:items-center">
         <ul className="hidden sm:flex flex-row gap-2 grow">
           {!search && recentTasks.map((t) => (
@@ -82,7 +83,7 @@ export default function TaskSearch({ taskDefinitions, handleDragStart, openTaskM
             </li>
           ))}
         </ul>
-        <div className="flex flex-row gap-1">
+        <div className="flex flex-row gap-1 relative">
           <input
             className="border lg:ml-auto px-2 py-1 rounded"
             placeholder="Search by name..."
