@@ -5,7 +5,7 @@ import { Sprint, Task, TaskDefinition } from "../models/taskDefinition";
 import TaskDefinitionBoard from "./taskDefinitionBoard";
 import TaskSearch from "./taskSearch";
 import { Status } from "@prisma/client";
-import { updateTaskDefinitionStatus } from "../actions";
+import { deleteTask, updateTaskDefinitionStatus } from "../actions";
 import TaskModal from "./taskModal";
 import TaskDefinitionForm from "./taskDefinitionForm";
 
@@ -15,15 +15,15 @@ export interface TaskBoardContainerProps {
 }
 
 export default function TaskBoardContainer({ sprint, allTaskDefinitions }: TaskBoardContainerProps) {
-  const dragTaskId = useRef<number | null>(null);
+  const dragTaskId = useRef<Task | TaskDefinition | null>(null);
 
-  const handleDragStart = (id: number) => {
-    dragTaskId.current = id;
+  const handleDragStart = (task: Task | TaskDefinition) => {
+    dragTaskId.current = task;
   };
 
   const handleDrop = async (col: string) => {
-    const id = dragTaskId.current;
-    if (!id) return;
+    const task = dragTaskId.current;
+    if (!task) return;
 
     let targetStatus: Status | null = null;
     if (col === "To Do This Week") targetStatus = Status.THIS_WEEK;
@@ -31,7 +31,15 @@ export default function TaskBoardContainer({ sprint, allTaskDefinitions }: TaskB
     else if (col === "Backlog") targetStatus = Status.BACKLOG;
     else if (col === "Done") targetStatus = Status.DONE;
 
-    await updateTaskDefinitionStatus(id, targetStatus);
+    if (task.type === 'definition') {
+      if (task.status != targetStatus) {
+        await updateTaskDefinitionStatus(task.id, targetStatus);
+      }
+    }
+    else if (targetStatus !== Status.DONE) {
+      await deleteTask(task.id, targetStatus!);
+    }
+
     dragTaskId.current = null;
   };
 

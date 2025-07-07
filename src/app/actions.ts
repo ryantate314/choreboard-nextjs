@@ -87,11 +87,27 @@ function mapTask(task: DataTask | null): Task | null {
   return null;
 }
 
-export async function deleteTask(id: number) {
+export async function deleteTask(id: number, newStatus?: Status | null) {
   "use server";
+  const task = await prisma.task.findFirstOrThrow({
+    where: {
+      id: id
+    }
+  });
+
   await prisma.task.delete({
     where: { id },
   });
+
+  if (newStatus)
+    await prisma.taskDefinition.update({
+      where: {
+        id: task.taskDefinitionId
+      },
+      data: {
+        status: newStatus
+      }
+    });
   revalidatePath("/");
 }
 
@@ -115,13 +131,13 @@ function getNextInstanceDate(taskDefinition: TaskDefinitionWithTasks): Date | nu
   return nextDate;
 }
 
-export async function updateTaskDefinitionStatus(id: number, status: Status | null) {
+export async function updateTaskDefinitionStatus(id: number, status: Status | null, completedDate?: Date) {
   "use server";
   const definition = await getTaskDefinition(id);
   if (!definition) return;
 
   if (status === Status.DONE) {
-    await completeTaskDefinition(id);
+    await completeTaskDefinition(id, completedDate);
   }
   else {
     await prisma.taskDefinition.update({
@@ -144,7 +160,7 @@ async function getTaskDefinition(id: number): Promise<TaskDefinition | null> {
   }).then(definition => definition ? mapTaskDefinition(definition) : null)
 }
 
-export async function completeTaskDefinition(id: number) {
+export async function completeTaskDefinition(id: number, completedDate?: Date) {
   "use server";
   // Create a new Task for this definition
   const taskDef = await getTaskDefinition(id);
@@ -152,7 +168,7 @@ export async function completeTaskDefinition(id: number) {
   await prisma.task.create({
     data: {
       taskDefinitionId: id,
-      completedAt: new Date(),
+      completedAt: completedDate ?? new Date(),
     },
   });
   // Set status back to BACKLOG

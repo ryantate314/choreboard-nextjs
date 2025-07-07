@@ -2,12 +2,12 @@
 
 import { Status } from "@prisma/client";
 import { Sprint, Task, TaskDefinition } from "../models/taskDefinition";
-import { formatDueDate } from "../dateUtils";
+import { formatRelativeTime } from "../dateUtils";
 
 export interface TaskDefinitionBoardProps {
   sprint: Sprint;
   handleDrop: (col: string) => void;
-  handleDragStart: (id: number, status: Status) => void;
+  handleDragStart: (task: Task | TaskDefinition) => void;
   openTaskModal: (task: Task | TaskDefinition) => void;
 }
 
@@ -22,11 +22,11 @@ function TaskDefinitionBoard({ sprint, handleDrop, handleDragStart, openTaskModa
 
   return (
     <>
-      <div className="grid grid-cols-4 gap-4 w-full">
+      <div className="flex flex-row gap-4 min-w-full overflow-x-auto">
         {["Backlog", "To Do This Week", "To Do Today", "Done"].map((col) => (
           <div
             key={col}
-            className="bg-surface-800 rounded p-2 min-h-[500px]"
+            className="bg-surface-800 rounded p-2 grow min-h-[500px] min-w-[150px]"
             onDragOver={e => e.preventDefault()}
             onDrop={() => handleDrop(col)}
           >
@@ -43,10 +43,14 @@ function TaskDefinitionBoard({ sprint, handleDrop, handleDragStart, openTaskModa
                     <div
                       key={task.id}
                       className="text-on-surface border rounded p-2 cursor-pointer"
+                      draggable
+                      onDragStart={() => handleDragStart(task)}
                       onClick={() => openTaskModal(task)}
                     >
                       <div className="font-semibold">{task.taskDefinition!.name}</div>
-                      <div className="text-xs text-gray-400">Completed: {task.completedAt!.toLocaleDateString()}</div>
+                      <div className="text-xs text-gray-400" title={task.completedAt!.toLocaleDateString()}>
+                        Completed: {formatRelativeTime(task.completedAt, { handleZero: 'past' })}
+                      </div>
                     </div>
                   ))
                 : taskDefinitions.filter(t => {
@@ -61,12 +65,12 @@ function TaskDefinitionBoard({ sprint, handleDrop, handleDragStart, openTaskModa
                       key={def.id}
                       className="bg-surface-800 text-on-surface border rounded p-2 cursor-pointer"
                       draggable
-                      onDragStart={() => handleDragStart(def.id, def.status as Status)}
+                      onDragStart={() => handleDragStart(def)}
                       onClick={() => openTaskModal(def)}
                     >
                       <div className="font-semibold">{def.name}</div>
                       {def.description && <div className="text-sm">{def.description}</div>}
-                      {def.nextInstanceDate && <div title={def.nextInstanceDate.toLocaleDateString()}>{formatDueDate(def)}</div>}
+                      {def.nextInstanceDate && <div title={def.nextInstanceDate.toLocaleDateString()}>{formatRelativeTime(def.nextInstanceDate)}</div>}
                     </div>
                   ))}
             </div>

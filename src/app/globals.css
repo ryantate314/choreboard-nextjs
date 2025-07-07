@@ -19,12 +19,22 @@
   --color-primary-600: #436977;
 }
 
+html,
+body {
+  height: 100%;
+  min-height: 100%;
+  background: var(--color-surface-950);
+}
+
 body {
   color: #fdfdfd;
   font-family: Arial, Helvetica, sans-serif;
-  height: 100vh;
 }
 
 button {
   cursor: pointer;
+}
+
+input {
+  color-scheme: dark;
 }

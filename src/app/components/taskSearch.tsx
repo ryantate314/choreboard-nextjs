@@ -2,13 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { Task, TaskDefinition } from "../models/taskDefinition";
-import { Status } from "@prisma/client";
 import TaskDefinitionForm from "./taskDefinitionForm";
 
 interface SearchResultsProps {
   results: TaskDefinition[];
   showTaskModal: (task: TaskDefinition) => void;
-  handleDragStart: (id: number, status: Status) => void;
+  handleDragStart: (task: TaskDefinition | Task) => void;
 }
 
 function SearchResults({ results, showTaskModal, handleDragStart }: SearchResultsProps) {
@@ -21,7 +20,7 @@ function SearchResults({ results, showTaskModal, handleDragStart }: SearchResult
           className="bg-surface-500 text-on-surface border rounded p-2 cursor-pointer"
           onClick={() => showTaskModal(t)}
           draggable
-          onDragStart={() => handleDragStart(t.id, t.status as Status)}
+          onDragStart={() => handleDragStart(t)}
         >
           <div className="font-semibold">{t.name}</div>
           { t.description && <div className="text-xs">{t.description}</div> }
@@ -35,7 +34,7 @@ function SearchResults({ results, showTaskModal, handleDragStart }: SearchResult
 
 export interface TaskSearchProps {
   taskDefinitions: TaskDefinition[];
-  handleDragStart: (id: number, status: Status) => void;
+  handleDragStart: (task: Task | TaskDefinition) => void;
   openTaskModal: (task: Task | TaskDefinition) => void;
 }
 
@@ -47,7 +46,7 @@ export default function TaskSearch({ taskDefinitions, handleDragStart, openTaskM
     return taskDefinitions
       .filter((t) => t.recurrence === null)
       .sort((a, b) => (b.lastCompletedTask?.completedAt?.getTime() ?? 0) - (a.lastCompletedTask?.completedAt?.getTime() ?? 0))
-      .slice(0, 5);
+      .slice(0, 4);
   }, [taskDefinitions]);
 
   // Only non-recurring (one-off) task definitions
@@ -70,13 +69,13 @@ export default function TaskSearch({ taskDefinitions, handleDragStart, openTaskM
 
   return (
     <div className="search-form">
-      <div className="mb-6 flex flex-row gap-4 items-center justify-between">
-        <ul className="flex flex-row gap-2">
+      <div className="mb-6 flex flex-col-reverse gap-4 justify-between lg:flex-row lg:items-center">
+        <ul className="hidden sm:flex flex-row gap-2 grow">
           {!search && recentTasks.map((t) => (
             <li key={t.id}
-              className="bg-surface-500 text-on-surface border rouaded p-2 cursor-pointer"
+              className="bg-surface-500 text-on-surface border rounded p-2 cursor-pointer whitespace-nowrap overflow-ellipsis text-center"
               draggable
-              onDragStart={() => handleDragStart(t.id, t.status as Status)}
+              onDragStart={() => handleDragStart(t)}
               onClick={() => showTaskModal(t)}
             >
               <div className="font-semibold">{t.name}</div>
@@ -85,7 +84,7 @@ export default function TaskSearch({ taskDefinitions, handleDragStart, openTaskM
         </ul>
         <div className="flex flex-row gap-1">
           <input
-            className="border ml-auto px-2 py-1 rounded"
+            className="border lg:ml-auto px-2 py-1 rounded"
             placeholder="Search by name..."
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -102,9 +101,7 @@ export default function TaskSearch({ taskDefinitions, handleDragStart, openTaskM
             className="bg-primary-500 text-on-surface px-4 py-2 rounded hover:bg-primary-600 transition-colors"
             onClick={() => setShowModal(true)}
             type="button"
-          >
-            + New Task
-          </button>
+          >+</button>
         </div>
         {showModal && (
           <TaskDefinitionForm closeModal={onCreateTaskModalClosed}/>
