@@ -26,7 +26,7 @@ export default function MenuBar({ sprintStart }: { sprintStart: Date }) {
     };
   }, [showMenu]);
 
-  return <div className="flex bg-primary-500 mb-2 *:transition-colors relative *:py-2">
+  return <div className="flex bg-primary-500 mb-4 *:transition-colors relative *:py-2">
     <Link href="/" className="block px-4 py-2 font-bold">ChoreBoard</Link>
     <div>{ sprintStart.toLocaleDateString() } - { addDays(sprintStart, 6).toLocaleDateString() }</div>
     <button

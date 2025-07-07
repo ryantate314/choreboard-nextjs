@@ -69,8 +69,8 @@ export default function TaskSearch({ taskDefinitions, handleDragStart, openTaskM
 
 
   return (
-    <div className="search-form relative">
-      <div className="mb-6 flex flex-col-reverse gap-4 justify-between lg:flex-row lg:items-center">
+    <div className="search-form">
+      <div className="mb-4 flex flex-col-reverse gap-4 justify-between lg:flex-row lg:items-center">
         <ul className="hidden sm:flex flex-row gap-2 grow">
           {!search && recentTasks.map((t) => (
             <li key={t.id}
@@ -83,7 +83,7 @@ export default function TaskSearch({ taskDefinitions, handleDragStart, openTaskM
             </li>
           ))}
         </ul>
-        <div className="flex flex-row gap-1 relative">
+        <div className="flex flex-row gap-1">
           <input
             className="border lg:ml-auto px-2 py-1 rounded"
             placeholder="Search by name..."
