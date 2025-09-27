@@ -4,13 +4,15 @@ import { prisma } from "./prisma";
 import { revalidatePath } from "next/cache";
 import { RRule } from "rrule";
 import { Sprint, Task, TaskDefinition } from "./models/taskDefinition";
-import { Prisma, Status, Task as DataTask } from "@prisma/client";
+import { Prisma, Status, Task as DataTask, User } from "@prisma/client";
+import { cache } from "react";
 
 export async function saveTaskDefinition(formData: FormData) {
   const id = formData.get("id") as string | undefined;
   const name = formData.get("name") as string;
   const description = formData.get("description") as string | undefined;
   const recurrence = formData.get("recurrence") as string | undefined;
+  const responsibleUserId = formData.get("responsibleUserId") as string | undefined;
   if (!name) return;
   let result: TaskDefinitionWithTasks;
   if (id) {
@@ -20,9 +22,11 @@ export async function saveTaskDefinition(formData: FormData) {
         name,
         description: description || undefined,
         recurrence: recurrence || undefined,
+        responsibleUserId: responsibleUserId ? parseInt(responsibleUserId) : undefined,
       },
       include: {
-        Task: true
+        Task: true,
+        responsibleUser: true,
       }
     });
   } else {
@@ -31,10 +35,12 @@ export async function saveTaskDefinition(formData: FormData) {
         name,
         description: description || undefined,
         recurrence: recurrence || undefined,
+        responsibleUserId: responsibleUserId ? parseInt(responsibleUserId) : undefined,
         status: recurrence ? Status.BACKLOG : null,
       },
       include: {
-        Task: true
+        Task: true,
+        responsibleUser: true,
       }
     });
   }
@@ -50,8 +56,10 @@ const taskDefinitionWithTasks = Prisma.validator<Prisma.TaskDefinitionInclude>()
 
 // Infer the type
 type TaskDefinitionWithTasks = Prisma.TaskDefinitionGetPayload<{
-  include: typeof taskDefinitionWithTasks;
-}>;
+  include: {
+    Task: true,
+    responsibleUser: true,
+}}>;
 
 export async function getAllTaskDefinitions(): Promise<TaskDefinition[]> {
   return await prisma.taskDefinition.findMany({
@@ -61,7 +69,8 @@ export async function getAllTaskDefinitions(): Promise<TaskDefinition[]> {
           createdAt: "desc",
         },
         take: 1, // Get the most recent task for each definition
-      }
+      },
+      responsibleUser: true,
     },
     where: {
       deletedAt: null,
@@ -156,6 +165,7 @@ async function getTaskDefinition(id: number): Promise<TaskDefinition | null> {
         orderBy: { createdAt: "desc" },
         take: 1,
       },
+      responsibleUser: true,
     },
   }).then(definition => definition ? mapTaskDefinition(definition) : null)
 }
@@ -204,6 +214,7 @@ export async function getSprint(searchParams?: { weekStart?: Date }): Promise<Sp
         orderBy: { createdAt: "desc" },
         take: 1,
       },
+      responsibleUser: true
     },
     where: {
       OR: [
@@ -242,3 +253,7 @@ export async function deleteTaskDefinition(id: number) {
   });
   revalidatePath("/");
 }
+
+export const getUsers = cache(async (): Promise<User[]> => {
+  return await prisma.user.findMany();
+});

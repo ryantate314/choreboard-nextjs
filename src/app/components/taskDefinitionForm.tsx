@@ -1,5 +1,6 @@
 "use client";
 import { FormEvent, useEffect, useState } from "react";
+import { getUsers } from "../actions";
 import { deleteTaskDefinition, saveTaskDefinition } from "../actions";
 import { TaskDefinition } from "../models/taskDefinition";
 
@@ -20,7 +21,17 @@ export default function TaskDefinitionForm({ definition, closeModal }: TaskDefin
   const [name, setName] = useState(definition?.name || "");
   const [description, setDescription] = useState(definition?.description || "");
   const [recurrence, setRecurrence] = useState(definition?.recurrence || "");
+  const [responsibleUserId, setResponsibleUserId] = useState(definition?.responsibleUserId || "");
+  const [users, setUsers] = useState<{id: number, firstName: string, lastName: string}[]>([]);
   const [createAnother, setCreateAnother] = useState(false);
+
+  useEffect(() => {
+    async function fetchUsers() {
+      const result = await getUsers();
+      setUsers(result);
+    }
+    fetchUsers();
+  }, []);
 
   async function doDelete() {
     await deleteTaskDefinition(definition!.id);
@@ -41,6 +52,7 @@ export default function TaskDefinitionForm({ definition, closeModal }: TaskDefin
     setName("");
     setDescription("");
     setRecurrence("");
+    setResponsibleUserId("");
   }
 
   return (
@@ -60,7 +72,6 @@ export default function TaskDefinitionForm({ definition, closeModal }: TaskDefin
             Name
             <input
               name="name"
-              className="border px-2 py-1 rounded w-full"
               value={name}
               onChange={e => setName(e.target.value)}
               required
@@ -70,16 +81,29 @@ export default function TaskDefinitionForm({ definition, closeModal }: TaskDefin
             Description
             <input
               name="description"
-              className="border px-2 py-1 rounded w-full"
               value={description}
               onChange={e => setDescription(e.target.value)}
             />
           </label>
           <label>
+            Responsible User
+            <select
+              name="responsibleUserId"
+              value={responsibleUserId}
+              onChange={e => setResponsibleUserId(e.target.value)}
+            >
+              <option value="">-- None --</option>
+              {users.map(user => (
+                <option key={user.id} value={user.id}>
+                  {user.firstName}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
             Recurrence
             <input
               name="recurrence"
-              className="border px-2 py-1 rounded w-full"
               value={recurrence}
               onChange={e => setRecurrence(e.target.value)}
             />

@@ -2,7 +2,7 @@
 // Learn more about it with the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
@@ -11,15 +11,27 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id        Int    @id @default(autoincrement())
+  firstName String
+  lastName  String
+
+  TaskDefinition TaskDefinition[]
+  Task           Task[]
+}
+
 model TaskDefinition {
-  id         Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   name        String
   description String?
-  recurrence String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  recurrence  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   status      Status?
-  deletedAt  DateTime?
+  deletedAt   DateTime?
+
+  responsibleUserId Int?
+  responsibleUser   User? @relation(fields: [responsibleUserId], references: [id])
 
   Task Task[]
 }
@@ -32,10 +44,13 @@ enum Status {
 }
 
 model Task {
-  id              Int              @id @default(autoincrement())
-  taskDefinition TaskDefinition   @relation(fields: [taskDefinitionId], references: [id])
+  id               Int            @id @default(autoincrement())
+  taskDefinition   TaskDefinition @relation(fields: [taskDefinitionId], references: [id])
   taskDefinitionId Int
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  completedAt     DateTime
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  completedAt      DateTime
+
+  completedById Int?
+  completedBy   User? @relation(fields: [completedById], references: [id])
 }

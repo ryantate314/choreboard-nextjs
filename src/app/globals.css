@@ -35,6 +35,17 @@ button {
   cursor: pointer;
 }
 
-input {
+input, select {
   color-scheme: dark;
+  border: 1px solid #4b5563; /* border-gray-600 */
+  background-color: var(--color-surface-800);
+  color: var(--color-on-surface);
+  padding: 0.25rem 0.5rem; /* px-2 py-1 */
+  border-radius: 0.25rem; /* rounded */
+  width: 100%; /* w-full */
+}
+
+input:focus, select:focus {
+  border-color: var(--color-primary-500);
+  outline: none;
 }

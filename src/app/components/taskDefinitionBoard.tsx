@@ -70,6 +70,7 @@ function TaskDefinitionBoard({ sprint, handleDrop, handleDragStart, openTaskModa
                     >
                       <div className="font-semibold">{def.name}</div>
                       {def.description && <div className="text-sm">{def.description}</div>}
+                      {def.responsibleUser && <div className="text-sm">{def.responsibleUser.firstName}</div>}
                       {def.nextInstanceDate &&
                         <div title={def.nextInstanceDate.toLocaleDateString()}
                           className={def.nextInstanceDate < new Date() ? 'text-red-500' : ''}

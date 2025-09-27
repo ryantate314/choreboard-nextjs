@@ -1,4 +1,4 @@
-import { Status } from "@prisma/client";
+import { Status, User } from "@prisma/client";
 
 interface TaskBase {
   id: number;
@@ -13,6 +13,9 @@ export interface TaskDefinition extends TaskBase {
   status: Status | null;
   lastCompletedTask?: Task | null;
   nextInstanceDate?: Date | null; // Optional, calculated from recurrence
+
+  responsibleUserId?: number | null;
+  responsibleUser?: User | null;
 }
 
 export interface Task extends TaskBase {

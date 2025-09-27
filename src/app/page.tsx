@@ -3,7 +3,8 @@
 import { Suspense } from "react";
 import { getAllTaskDefinitions, getSprint } from "./actions";
 import TaskBoardContainer from "./components/taskBoardContainer";
-import MenuBar from "./components/menuBar";
+import MenuBar from "./components/menuBar"
+
 
 type Params = Promise<{ weekStart?: string }>;
 
