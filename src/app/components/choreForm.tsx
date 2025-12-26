@@ -1,15 +1,15 @@
 "use client";
 import { FormEvent, useEffect, useState } from "react";
 import { getUsers } from "../actions";
-import { deleteTaskDefinition, saveTaskDefinition } from "../actions";
-import { TaskDefinition } from "../models/taskDefinition";
+import { deleteChore, saveChore } from "../actions";
+import { Chore } from "../models/chore";
 
-export interface TaskDefinitionFormProps {
-  definition?: TaskDefinition;
-  closeModal: (task?: TaskDefinition) => void;
+export interface ChoreFormProps {
+  chore?: Chore;
+  closeModal: (chore?: Chore) => void;
 }
 
-export default function TaskDefinitionForm({ definition, closeModal }: TaskDefinitionFormProps) {
+export default function ChoreForm({ chore, closeModal }: ChoreFormProps) {
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") closeModal();
@@ -18,10 +18,10 @@ export default function TaskDefinitionForm({ definition, closeModal }: TaskDefin
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [closeModal]);
 
-  const [name, setName] = useState(definition?.name || "");
-  const [description, setDescription] = useState(definition?.description || "");
-  const [recurrence, setRecurrence] = useState(definition?.recurrence || "");
-  const [responsibleUserId, setResponsibleUserId] = useState(definition?.responsibleUserId || "");
+  const [name, setName] = useState(chore?.name || "");
+  const [description, setDescription] = useState(chore?.description || "");
+  const [recurrence, setRecurrence] = useState(chore?.recurrence || "");
+  const [responsibleUserId, setResponsibleUserId] = useState(chore?.responsibleUserId || "");
   const [users, setUsers] = useState<{id: number, firstName: string, lastName: string}[]>([]);
   const [createAnother, setCreateAnother] = useState(false);
 
@@ -34,18 +34,18 @@ export default function TaskDefinitionForm({ definition, closeModal }: TaskDefin
   }, []);
 
   async function doDelete() {
-    await deleteTaskDefinition(definition!.id);
+    await deleteChore(chore!.id);
     closeModal();
   }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const newDefinition = await saveTaskDefinition(formData);
+    const newChore = await saveChore(formData);
     if (createAnother)
       resetForm();
     else
-      closeModal(newDefinition);
+      closeModal(newChore);
   }
 
   function resetForm() {
@@ -67,7 +67,7 @@ export default function TaskDefinitionForm({ definition, closeModal }: TaskDefin
           &times;
         </button>
         <form onSubmit={handleSubmit} className="flex flex-col gap-2 p-4 mb-4">
-          <input type="hidden" name="id" value={definition?.id || ""} />
+          <input type="hidden" name="id" value={chore?.id || ""} />
           <label>
             Name
             <input
@@ -109,8 +109,8 @@ export default function TaskDefinitionForm({ definition, closeModal }: TaskDefin
             />
           </label>
           <a href="https://icalendar.org/rrule-tool.html" target="_blank" className="text-blue-500 underline">RRule Tool</a>
-          <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded mt-2 cursor-pointer">Save Task Definition</button>
-          { !definition && <label>
+          <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded mt-2 cursor-pointer">Save Chore</button>
+          { !chore && <label>
             Create Another?
             <input
               type="checkbox"
@@ -120,7 +120,7 @@ export default function TaskDefinitionForm({ definition, closeModal }: TaskDefin
             />
             </label>
           }
-          { definition && <button type="button" className="bg-red-500 text-white px-4 py-2 rounded mt-2 cursor-pointer" onClick={doDelete}>Delete Task Definition</button> }
+          { chore && <button type="button" className="bg-red-500 text-white px-4 py-2 rounded mt-2 cursor-pointer" onClick={doDelete}>Delete Chore</button> }
         </form>
       </div>
     </div>

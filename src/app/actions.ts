@@ -2,21 +2,29 @@
 
 import { prisma } from "./prisma";
 import { revalidatePath } from "next/cache";
-import { RRule } from "rrule";
-import { Sprint, Task, TaskDefinition } from "./models/taskDefinition";
-import { Prisma, Status, Task as DataTask, User } from "@prisma/client";
+import { Chore, Sprint } from "./models/chore";
+import { mapToChore, mapToCompletion } from "./models/mappers";
+import { Prisma, Status, User } from "@prisma/client";
 import { cache } from "react";
 
-export async function saveTaskDefinition(formData: FormData) {
+// Define the query shape for Chore with completions
+type ChoreWithCompletions = Prisma.ChoreGetPayload<{
+  include: {
+    ChoreCompletion: true;
+    responsibleUser: true;
+  };
+}>;
+
+export async function saveChore(formData: FormData) {
   const id = formData.get("id") as string | undefined;
   const name = formData.get("name") as string;
   const description = formData.get("description") as string | undefined;
   const recurrence = formData.get("recurrence") as string | undefined;
   const responsibleUserId = formData.get("responsibleUserId") as string | undefined;
   if (!name) return;
-  let result: TaskDefinitionWithTasks;
+  let result: ChoreWithCompletions;
   if (id) {
-    result = await prisma.taskDefinition.update({
+    result = await prisma.chore.update({
       where: { id: parseInt(id) },
       data: {
         name,
@@ -25,12 +33,12 @@ export async function saveTaskDefinition(formData: FormData) {
         responsibleUserId: responsibleUserId ? parseInt(responsibleUserId) : undefined,
       },
       include: {
-        Task: true,
+        ChoreCompletion: true,
         responsibleUser: true,
-      }
+      },
     });
   } else {
-    result = await prisma.taskDefinition.create({
+    result = await prisma.chore.create({
       data: {
         name,
         description: description || undefined,
@@ -39,115 +47,78 @@ export async function saveTaskDefinition(formData: FormData) {
         status: recurrence ? Status.BACKLOG : null,
       },
       include: {
-        Task: true,
+        ChoreCompletion: true,
         responsibleUser: true,
-      }
+      },
     });
   }
   revalidatePath("/");
-  return mapTaskDefinition(result);
+  return mapToChore(result);
 }
 
-// Define the query shape
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const taskDefinitionWithTasks = Prisma.validator<Prisma.TaskDefinitionInclude>()({
-  Task: true,
-});
-
-// Infer the type
-type TaskDefinitionWithTasks = Prisma.TaskDefinitionGetPayload<{
-  include: {
-    Task: true,
-    responsibleUser: true,
-}}>;
-
-export async function getAllTaskDefinitions(): Promise<TaskDefinition[]> {
-  return await prisma.taskDefinition.findMany({
+export async function getAllChores(): Promise<Chore[]> {
+  const chores = await prisma.chore.findMany({
     include: {
-      Task: {
+      ChoreCompletion: {
         orderBy: {
           createdAt: "desc",
         },
-        take: 1, // Get the most recent task for each definition
+        take: 1, // Get the most recent completion for each chore
       },
       responsibleUser: true,
     },
     where: {
       deletedAt: null,
-    }
-  }).then(definitions => definitions.map(d => mapTaskDefinition(d)));
+    },
+  });
+  return chores.map((c) => mapToChore(c));
 }
 
-function mapTaskDefinition(definition: TaskDefinitionWithTasks): TaskDefinition {
-  return {
-    ...definition,
-    type: 'definition',
-    lastCompletedTask: mapTask(definition.Task[0]),
-    nextInstanceDate: getNextInstanceDate(definition),
-  };
-}
-
-function mapTask(task: DataTask | null): Task | null {
-  if (task)
-    return {
-      ...task,
-      type: 'task'
-    }
-  return null;
-}
-
-export async function deleteTask(id: number, newStatus?: Status | null) {
-  const task = await prisma.task.findFirstOrThrow({
+export async function deleteCompletion(id: number, newStatus?: Status | null) {
+  const completion = await prisma.choreCompletion.findFirstOrThrow({
     where: {
-      id: id
-    }
+      id: id,
+    },
   });
 
-  await prisma.task.delete({
+  await prisma.choreCompletion.delete({
     where: { id },
   });
 
   if (newStatus)
-    await prisma.taskDefinition.update({
+    await prisma.chore.update({
       where: {
-        id: task.taskDefinitionId
+        id: completion.choreId,
       },
       data: {
-        status: newStatus
-      }
+        status: newStatus,
+      },
     });
   revalidatePath("/");
 }
 
-function getNextInstanceDate(taskDefinition: TaskDefinitionWithTasks): Date | null {
-  if (!taskDefinition.recurrence) return null;
-  if (taskDefinition.Task.length === 0)
-    return taskDefinition.createdAt;
-
-  let nextDate;
-  const options = RRule.parseString(taskDefinition.recurrence);
-  const rule = new RRule({
-    ...options,
-    dtstart: taskDefinition.Task[0]?.completedAt,
+async function getChore(id: number): Promise<Chore | null> {
+  const chore = await prisma.chore.findUnique({
+    where: { id },
+    include: {
+      ChoreCompletion: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+      },
+      responsibleUser: true,
+    },
   });
-  rule.all((d, len) => {
-    nextDate = d;
-    return len < 1; // Stop after finding the first future date
-  });
-  if (!nextDate)
-    throw new Error("No next instance found for recurrence rule");
-  return nextDate;
+  return chore ? mapToChore(chore) : null;
 }
 
-export async function updateTaskDefinitionStatus(id: number, status: Status | null, completedDate?: Date) {
-  const definition = await getTaskDefinition(id);
-  if (!definition) return;
+export async function updateChoreStatus(id: number, status: Status | null, completedDate?: Date) {
+  const chore = await getChore(id);
+  if (!chore) return;
 
   if (status === Status.DONE) {
-    await completeTaskDefinition(id, completedDate);
-  }
-  else {
-    await prisma.taskDefinition.update({
+    await completeChore(id, completedDate);
+  } else {
+    await prisma.chore.update({
       where: { id },
       data: { status },
     });
@@ -155,35 +126,21 @@ export async function updateTaskDefinitionStatus(id: number, status: Status | nu
   revalidatePath("/");
 }
 
-async function getTaskDefinition(id: number): Promise<TaskDefinition | null> {
-  return await prisma.taskDefinition.findUnique({
-    where: { id },
-    include: {
-      Task: {
-        orderBy: { createdAt: "desc" },
-        take: 1,
-      },
-      responsibleUser: true,
-    },
-  }).then(definition => definition ? mapTaskDefinition(definition) : null)
-}
-
-export async function completeTaskDefinition(id: number, completedDate?: Date) {
-  // Create a new Task for this definition
-  const taskDef = await getTaskDefinition(id);
-  if (!taskDef) return;
-  await prisma.task.create({
+export async function completeChore(id: number, completedDate?: Date) {
+  // Create a new ChoreCompletion for this chore
+  const chore = await getChore(id);
+  if (!chore) return;
+  await prisma.choreCompletion.create({
     data: {
-      taskDefinitionId: id,
+      choreId: id,
       completedAt: completedDate ?? new Date(),
     },
   });
-  // Set status back to BACKLOG
-  await prisma.taskDefinition.update({
+  // Set status back to BACKLOG for recurring, null for one-off
+  await prisma.chore.update({
     where: { id },
     data: {
-      // Set status to null for one-off tasks
-      status: taskDef.recurrence ? Status.BACKLOG : null
+      status: chore.recurrence ? Status.BACKLOG : null,
     },
   });
   revalidatePath("/");
@@ -204,44 +161,46 @@ export async function getSprint(searchParams?: { weekStart?: Date }): Promise<Sp
   const weekEnd = new Date(weekStart);
   weekEnd.setDate(weekStart.getDate() + 7);
 
-  // Get all task definitions (with their most recent task)
-  const definitions = await prisma.taskDefinition.findMany({
+  // Get all chores (with their most recent completion)
+  const choreRecords = await prisma.chore.findMany({
     include: {
-      Task: {
+      ChoreCompletion: {
         orderBy: { createdAt: "desc" },
         take: 1,
       },
-      responsibleUser: true
+      responsibleUser: true,
     },
     where: {
       OR: [
-        { status: { not: null } }, // One-off tasks which have been assigned to a sprint
-        { recurrence: { not: null } }, // Recurring task
-      ]
-    }
-  }).then(taskDefinitions => taskDefinitions.map(t => mapTaskDefinition(t)));
+        { status: { not: null } }, // One-off chores which have been assigned to a sprint
+        { recurrence: { not: null } }, // Recurring chores
+      ],
+    },
+  });
+  const chores = choreRecords.map((c) => mapToChore(c));
 
-  // Get all completed tasks (with their definition) for the week
-  const doneTasks = await prisma.task.findMany({
+  // Get all completions for the week
+  const completionRecords = await prisma.choreCompletion.findMany({
     where: {
       completedAt: {
         gte: weekStart,
         lt: weekEnd,
       },
     },
-    include: { taskDefinition: true },
+    include: { chore: true },
     orderBy: { completedAt: "desc" },
-  }).then(tasks => tasks.map(task => mapTask(task)!));
+  });
+  const completions = completionRecords.map((c) => mapToCompletion(c));
 
   return {
     start: weekStart,
-    taskDefinitions: definitions,
-    doneTasks
+    chores,
+    completions,
   };
 }
 
-export async function deleteTaskDefinition(id: number) {
-  await prisma.taskDefinition.update({
+export async function deleteChore(id: number) {
+  await prisma.chore.update({
     where: { id },
     data: {
       deletedAt: new Date(),

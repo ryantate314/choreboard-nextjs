@@ -1,18 +1,18 @@
 "use client";
 
 import { Status } from "@prisma/client";
-import { AllTasks, Task, TaskDefinition } from "../models/taskDefinition";
-import { deleteTask, updateTaskDefinitionStatus } from "../actions";
+import { AllChores, Chore, ChoreCompletion } from "../models/chore";
+import { deleteCompletion, updateChoreStatus } from "../actions";
 import { useEffect, useState } from "react";
 import { RRule } from "rrule";
 import { formatRelativeTime } from "../dateUtils";
 
-export interface TaskModalProps {
-  task: AllTasks;
+export interface ChoreModalProps {
+  item: AllChores;
   closeModal: () => void;
-  showEditTaskModal: (task: TaskDefinition) => void;
+  showEditModal: (chore: Chore) => void;
 }
-export default function TaskModal({ task, closeModal, showEditTaskModal }: TaskModalProps) {
+export default function ChoreModal({ item, closeModal, showEditModal }: ChoreModalProps) {
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") closeModal();
@@ -24,33 +24,33 @@ export default function TaskModal({ task, closeModal, showEditTaskModal }: TaskM
   const [showDoneOptions, setShowDoneOptions] = useState(false);
   const [completionDate, setCompletionDate] = useState(new Date());
 
-  const taskDefinition: TaskDefinition = task.type === 'definition'
-    ? (task as TaskDefinition)
-    : (task as Task).taskDefinition!;
+  const chore: Chore = item.type === 'chore'
+    ? (item as Chore)
+    : (item as ChoreCompletion).chore!;
 
-  const name = taskDefinition.name;
-  const description = taskDefinition.description;
+  const name = chore.name;
+  const description = chore.description;
   const currentStatus =
-    task.type === 'definition'
-      ? (task as TaskDefinition).status
+    item.type === 'chore'
+      ? (item as Chore).status
       : Status.DONE;
 
   async function updateStatus(status: Status | null, completedDate?: Date) {
-    // Task is done and we're moving it to an incomplete status.
-    if (task.type === 'task')
-      await deleteTask(task.id, status);
+    // Item is done (completion) and we're moving it to an incomplete status.
+    if (item.type === 'completion')
+      await deleteCompletion(item.id, status);
     else
-      await updateTaskDefinitionStatus(task.id, status, completedDate);
+      await updateChoreStatus(item.id, status, completedDate);
       closeModal();
   }
 
-  async function deleteTaskClick() {
-    await deleteTask((task as Task).id);
+  async function deleteCompletionClick() {
+    await deleteCompletion((item as ChoreCompletion).id);
     closeModal();
   }
 
   function recurrenceString() {
-    return taskDefinition.recurrence ? RRule.fromString(taskDefinition.recurrence).toText() : null;
+    return chore.recurrence ? RRule.fromString(chore.recurrence).toText() : null;
   }
 
   function decrementCompletionDate() {
@@ -81,11 +81,11 @@ export default function TaskModal({ task, closeModal, showEditTaskModal }: TaskM
         <div className="mb-4">
           <div className="text-2xl font-bold mb-2">{name}</div>
           <div className="mb-2 text-on-surface">{description}</div>
-          { taskDefinition.lastCompletedTask && <div>Last Completed: { taskDefinition.lastCompletedTask.completedAt!.toLocaleString() }</div> }
-          { taskDefinition.recurrence && <div>Repeats: { recurrenceString() }</div> }
-          { taskDefinition.nextInstanceDate && <div>Next Instance: { taskDefinition.nextInstanceDate.toLocaleDateString() } ({ formatRelativeTime(taskDefinition.nextInstanceDate )}) </div> }
+          { chore.lastCompletion && <div>Last Completed: { chore.lastCompletion.completedAt.toLocaleString() }</div> }
+          { chore.recurrence && <div>Repeats: { recurrenceString() }</div> }
+          { chore.nextDueDate && <div>Next Instance: { chore.nextDueDate.toLocaleDateString() } ({ formatRelativeTime(chore.nextDueDate )}) </div> }
         </div>
-        { currentStatus !== Status.DONE && 
+        { currentStatus !== Status.DONE &&
           <div className="flex mb-2">
             <button className="bg-green-500 text-lg py-4 px-4 rounded-l-md grow" onClick={() => updateStatus(Status.DONE, completionDate)}>
               Done
@@ -117,12 +117,12 @@ export default function TaskModal({ task, closeModal, showEditTaskModal }: TaskM
               </button>
             ))
           }
-          <button className="bg-yellow-500 py-2 text-lg rounded" onClick={() => showEditTaskModal(taskDefinition)}>Edit</button>
-          { taskDefinition.recurrence && currentStatus === Status.DONE &&
-            <button className="bg-red-500 text-white text-lg py-2 rounded" onClick={() => deleteTaskClick()}>Delete Task</button>
+          <button className="bg-yellow-500 py-2 text-lg rounded" onClick={() => showEditModal(chore)}>Edit</button>
+          { chore.recurrence && currentStatus === Status.DONE &&
+            <button className="bg-red-500 text-white text-lg py-2 rounded" onClick={() => deleteCompletionClick()}>Delete Completion</button>
           }
-          { !taskDefinition.recurrence && taskDefinition.status &&
-            <button className="bg-red-500 text-white text-lg py-2 rounded" onClick={() => updateStatus(null)}>Delete Task</button>
+          { !chore.recurrence && chore.status &&
+            <button className="bg-red-500 text-white text-lg py-2 rounded" onClick={() => updateStatus(null)}>Delete Chore</button>
           }
         </div>
       </div>

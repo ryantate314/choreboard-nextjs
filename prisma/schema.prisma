@@ -16,11 +16,11 @@ model User {
   firstName String
   lastName  String
 
-  TaskDefinition TaskDefinition[]
-  Task           Task[]
+  Chore           Chore[]
+  ChoreCompletion ChoreCompletion[]
 }
 
-model TaskDefinition {
+model Chore {
   id          Int       @id @default(autoincrement())
   name        String
   description String?
@@ -33,7 +33,7 @@ model TaskDefinition {
   responsibleUserId Int?
   responsibleUser   User? @relation(fields: [responsibleUserId], references: [id])
 
-  Task Task[]
+  ChoreCompletion ChoreCompletion[]
 }
 
 enum Status {
@@ -43,13 +43,13 @@ enum Status {
   DONE // Only used for API calls, not stored in the database
 }
 
-model Task {
-  id               Int            @id @default(autoincrement())
-  taskDefinition   TaskDefinition @relation(fields: [taskDefinitionId], references: [id])
-  taskDefinitionId Int
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  completedAt      DateTime
+model ChoreCompletion {
+  id          Int      @id @default(autoincrement())
+  chore       Chore    @relation(fields: [choreId], references: [id])
+  choreId     Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  completedAt DateTime
 
   completedById Int?
   completedBy   User? @relation(fields: [completedById], references: [id])
