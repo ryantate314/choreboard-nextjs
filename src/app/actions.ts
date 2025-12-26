@@ -97,7 +97,6 @@ function mapTask(task: DataTask | null): Task | null {
 }
 
 export async function deleteTask(id: number, newStatus?: Status | null) {
-  "use server";
   const task = await prisma.task.findFirstOrThrow({
     where: {
       id: id
@@ -141,7 +140,6 @@ function getNextInstanceDate(taskDefinition: TaskDefinitionWithTasks): Date | nu
 }
 
 export async function updateTaskDefinitionStatus(id: number, status: Status | null, completedDate?: Date) {
-  "use server";
   const definition = await getTaskDefinition(id);
   if (!definition) return;
 
@@ -171,7 +169,6 @@ async function getTaskDefinition(id: number): Promise<TaskDefinition | null> {
 }
 
 export async function completeTaskDefinition(id: number, completedDate?: Date) {
-  "use server";
   // Create a new Task for this definition
   const taskDef = await getTaskDefinition(id);
   if (!taskDef) return;
@@ -244,7 +241,6 @@ export async function getSprint(searchParams?: { weekStart?: Date }): Promise<Sp
 }
 
 export async function deleteTaskDefinition(id: number) {
-  "use server";
   await prisma.taskDefinition.update({
     where: { id },
     data: {

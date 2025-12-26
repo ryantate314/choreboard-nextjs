@@ -14,8 +14,7 @@
   "dependencies": {
     "@prisma/client": "^6.9.0",
     "humanize-duration": "^3.33.0",
-    "next": "15.3.3",
-    "prisma": "^6.9.0",
+    "next": "^15.5.9",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "rrule": "^2.8.1"
@@ -28,7 +27,8 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "15.3.3",
+    "eslint-config-next": "^15.5.9",
+    "prisma": "^6.9.0",
     "tailwindcss": "^4",
     "tsx": "^4.20.6",
     "typescript": "^5"

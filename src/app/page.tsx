@@ -1,5 +1,3 @@
-"use server";
-
 import { Suspense } from "react";
 import { getAllTaskDefinitions, getSprint } from "./actions";
 import TaskBoardContainer from "./components/taskBoardContainer";
