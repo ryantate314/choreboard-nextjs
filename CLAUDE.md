@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Choreboard is a Next.js household chore tracking app with Kanban-style task boards, recurring task support, and sprint/weekly planning.
 
-**Stack**: Next.js 15.3 (App Router), React 19, TypeScript, Prisma ORM, PostgreSQL, Tailwind CSS 4
+**Stack**: Next.js 15 (App Router), React 19, TypeScript, Prisma ORM, PostgreSQL, Tailwind CSS 4
 
 ## Common Commands
 
@@ -22,34 +22,34 @@ npx prisma db seed   # Seed database with default users
 ## Architecture
 
 ### Server vs Client Split
-- `src/app/page.tsx` - Server component that fetches Sprint and task data
+- `src/app/page.tsx` - Server component that fetches Sprint and chore data
 - `src/app/components/` - Client components (`"use client"`) for interactivity
 - `src/app/actions.ts` - Server actions for all database mutations, uses `revalidatePath("/")` to refresh
 
 ### Key Domain Concepts
 - **Sprint**: Weekly planning window (Monday-Sunday)
-- **TaskDefinition**: Reusable task template with optional recurrence (RRule/iCalendar format)
-- **Task**: Individual completion record with timestamp
+- **Chore**: Reusable chore template with optional recurrence (RRule/iCalendar format)
+- **ChoreCompletion**: Individual completion record with timestamp
 - **Status**: BACKLOG → THIS_WEEK → TODAY → DONE (soft delete via `deletedAt`)
 
-### Data Models (`src/app/models/taskDefinition.ts`)
-Core TypeScript interfaces for Sprint, TaskDefinition, Task, and User entities.
+### Data Models (`src/app/models/chore.ts`)
+Core TypeScript interfaces for Sprint, Chore, ChoreCompletion, and User entities. Includes `STATUS_TRANSITIONS` defining valid state changes.
 
 ### Database Schema (`prisma/schema.prisma`)
-- User → TaskDefinition (1:many as responsible person)
-- User → Task (1:many as completedBy)
-- TaskDefinition → Task (1:many completion history)
+- User → Chore (1:many as responsible person)
+- User → ChoreCompletion (1:many as completedBy)
+- Chore → ChoreCompletion (1:many completion history)
 
 ### Recurrence System
-Uses the `rrule` library for recurring tasks. Next instance calculated from last completion date. RRule format follows iCalendar spec.
+Uses the `rrule` library for recurring chores. Next due date calculated from last completion. RRule format follows iCalendar spec.
 
 ## Key Files
 
-- `src/app/actions.ts` - All server actions (createTask, updateStatus, markComplete, etc.)
-- `src/app/components/taskBoardContainer.tsx` - Main container with modal state management
-- `src/app/components/taskDefinitionBoard.tsx` - Kanban columns with drag/drop
-- `src/app/components/taskDefinitionForm.tsx` - Create/edit modal with RRule support
-- `src/app/dateUtils.ts` - Date formatting utilities
+- `src/app/actions.ts` - All server actions (saveChore, updateChoreStatus, completeChore, etc.)
+- `src/app/components/choreBoardContainer.tsx` - Main container with drag/drop and modal state
+- `src/app/components/choreBoard.tsx` - Kanban columns rendering
+- `src/app/components/choreForm.tsx` - Create/edit modal with RRule support
+- `src/app/models/mappers.ts` - Prisma to domain model mapping
 
 ## Environment Variables
 
