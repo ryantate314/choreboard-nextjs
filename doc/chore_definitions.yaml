@@ -1,0 +1,92 @@
+- name: Change HVAC Filters
+  recurrence: FREQ=MONTHLY;INTERVAL=3
+  category: Home Maintenance
+
+- name: Pour Vinegar in HVAC Drain
+  recurrence: FREQ=MONTHLY;INTERVAL=1
+  category: Home Maintenance
+
+- name: Vacuum Fridge Coils
+  recurrence: FREQ=MONTHLY;INTERVAL=3
+  category: Home Maintenance
+
+- name: Test Smoke/CO Detectors
+  recurrence: FREQ=MONTHLY;INTERVAL=3
+  category: Home Maintenance
+
+- name: Inspect Crawlspace Plumbing for Leaks
+  recurrence: FREQ=MONTHLY;INTERVAL=6
+  category: Home Maintenance
+
+- name: Clean Garbage Disposal
+  recurrence: FREQ=MONTHLY
+  category: Appliances
+
+- name: Clean Dishwasher
+  recurrence: FREQ=MONTHLY
+  description: Remove and clean filter. Place filter on top rack and run with a cleaning tablet.
+  category: Appliances
+
+- name: Clean Washing Machine
+  recurrence: FREQ=MONTHLY
+  category: Appliances
+
+- name: Clean Microwave Filters
+  recurrence: FREQ=MONTHLY;INTERVAL=3
+  category: Appliances
+
+- name: HVAC Service/cleaning
+  recurrence: FREQ=MONTHLY;INTERVAL=6
+  category: Home Maintenance
+
+- name: Clean Gutters
+  recurrence: FREQ=YEARLY;INTERVAL=1;BYMONTH=09
+  category: Home Maintenance
+
+- name: Oil Garage Door Track, Chain, and Springs
+  recurrence: FREQ=YEARLY;INTERVAL=1;BYMONTH=04
+  category: Home Maintenance
+
+- name: Clean Window Weep Holes
+  recurrence: FREQ=YEARLY;INTERVAL=1;BYMONTH=04
+  category: Home Maintenance
+
+- name: Clean Patio Furniture
+  recurrence: FREQ=YEARLY;INTERVAL=1;BYMONTH=04
+  category: cleaning
+
+- name: Inspect Shingles
+  recurrence: FREQ=YEARLY;INTERVAL=1;BYMONTH=04
+  category: Home Maintenance
+
+- name: Inspect Window Caulking
+  recurrence: FREQ=YEARLY;INTERVAL=1;BYMONTH=04
+  category: Home Maintenance
+
+- name: Inspect Door Caulking
+  recurrence: FREQ=YEARLY;INTERVAL=1;BYMONTH=04
+  category: Home Maintenance
+
+- name: Flush Water Heater
+  recurrence: FREQ=YEARLY;INTERVAL=1;BYMONTH=06
+  category: Home Maintenance
+
+- name: Clean Drier Vent Duct
+  recurrence: FREQ=YEARLY;INTERVAL=1;BYMONTH=06
+  category: Home Maintenance
+
+- name: Wash Windows
+  recurrence: FREQ=YEARLY;INTERVAL=1;BYMONTH=04
+  category: Cleaning
+
+- name: Replace Fridge Water Filters
+  recurrence: FREQ=MONTHLY;INTERVAL=6
+  category: Home Maintenance
+
+- name: Clean Oven
+  recurrence: FREQ=YEARLY;INTERVAL=1;BYMONTH=04
+  category: Cleaning
+
+- name: Replace CO Detector Batteries
+  recurrence: FREQ=MONTHLY;INTERVAL=6
+  category: Home Maintenance
