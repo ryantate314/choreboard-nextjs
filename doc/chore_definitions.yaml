@@ -90,3 +90,7 @@
 - name: Replace CO Detector Batteries
   recurrence: FREQ=MONTHLY;INTERVAL=6
   category: Home Maintenance
+
+- name: Seal Shower Grout
+  recurrence: FREQ=MONTHLY;INTERVAL=6
+  category: Home Maintenance
