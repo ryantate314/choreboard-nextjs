@@ -1,73 +1,55 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, MoreVertical } from "lucide-react";
 import { addDays } from "../../dateUtils";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function SprintNav({ sprintStart }: { sprintStart: Date }) {
-  const [showMenu, setShowMenu] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!showMenu) return;
-    function handleClick(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node))
-        setShowMenu(false);
-    }
-    function handleEscape(e: KeyboardEvent) {
-      if (e.key === "Escape") setShowMenu(false);
-    }
-    window.addEventListener("mousedown", handleClick);
-    window.addEventListener("keydown", handleEscape);
-    return () => {
-      window.removeEventListener("mousedown", handleClick);
-      window.removeEventListener("keydown", handleEscape);
-    };
-  }, [showMenu]);
-
   return (
-    <div className="flex items-center relative">
+    <div className="flex items-center">
       <div className="px-4 py-2">
         {sprintStart.toLocaleDateString()} - {addDays(sprintStart, 6).toLocaleDateString()}
       </div>
-      <button
-        className="bg-primary-500 text-on-surface px-4 py-2 rounded hover:bg-primary-600 transition-colors"
-        onClick={() => setShowMenu(true)}
-        type="button"
-      >
-        &#8942;
-      </button>
-      {showMenu && (
-        <div
-          ref={menuRef}
-          className="absolute right-0 top-full mt-2 bg-surface-800 border rounded shadow-lg z-50 min-w-[150px] p-2"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex items-center">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="default" size="icon">
+            <MoreVertical />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem asChild>
             <Link
               href={{
                 pathname: "/chores",
                 query: { weekStart: addDays(sprintStart, -7).toLocaleDateString() },
               }}
-              className="block w-full text-left px-2 py-1 hover:bg-surface-700 rounded"
-              onClick={() => setShowMenu(false)}
+              className="flex items-center gap-2"
             >
-              &lsaquo;
+              <ChevronLeft className="size-4" />
+              Previous Week
             </Link>
-            {sprintStart.toLocaleDateString()}
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
             <Link
               href={{
                 pathname: "/chores",
                 query: { weekStart: addDays(sprintStart, 7).toLocaleDateString() },
               }}
-              className="block w-full text-left px-2 py-1 hover:bg-surface-700 rounded"
-              onClick={() => setShowMenu(false)}
+              className="flex items-center gap-2"
             >
-              &rsaquo;
+              <ChevronRight className="size-4" />
+              Next Week
             </Link>
-          </div>
-        </div>
-      )}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }

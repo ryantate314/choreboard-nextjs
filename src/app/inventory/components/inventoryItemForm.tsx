@@ -1,8 +1,25 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { InventoryItem, Location } from "../../models/inventory";
 import { saveInventoryItem, deleteInventoryItem } from "../../actions/inventory";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export interface InventoryItemFormProps {
   item: InventoryItem | null;
@@ -13,14 +30,6 @@ export interface InventoryItemFormProps {
 }
 
 export default function InventoryItemForm({ item, locations, closeModal, initialLocationId, initialSublocationId }: InventoryItemFormProps) {
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") closeModal();
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [closeModal]);
-
   const [name, setName] = useState(item?.name || "");
   const [description, setDescription] = useState(item?.description || "");
   const [categoryTag, setCategoryTag] = useState(item?.categoryTag || "");
@@ -52,103 +61,111 @@ export default function InventoryItemForm({ item, locations, closeModal, initial
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-surface-950 rounded shadow-lg p-6 min-w-[350px] relative border border-white">
-        <button
-          className="absolute top-2 right-2 text-on-surface hover:text-gray-700 text-xl"
-          onClick={closeModal}
-          aria-label="Close"
-          type="button"
-        >
-          &times;
-        </button>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-2 p-4 mb-4">
+    <Dialog open={true} onOpenChange={(open) => { if (!open) closeModal(); }}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{item ? "Edit Item" : "Add Item"}</DialogTitle>
+          <DialogDescription className="sr-only">
+            {item ? "Edit an existing inventory item" : "Add a new inventory item"}
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           {item && <input type="hidden" name="id" value={item.id} />}
-          <label>
-            Name
-            <input
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="inv-name">Name</Label>
+            <Input
+              id="inv-name"
               name="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
             />
-          </label>
-          <label>
-            Description
-            <input
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="inv-description">Description</Label>
+            <Input
+              id="inv-description"
               name="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
-          </label>
-          <label>
-            Location
-            <select
-              value={locationId}
-              onChange={(e) => {
-                setLocationId(e.target.value);
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label>Location</Label>
+            <Select
+              value={locationId || "none"}
+              onValueChange={(v) => {
+                setLocationId(v === "none" ? "" : v);
                 setSublocationId("");
               }}
             >
-              <option value="">-- Select Location --</option>
-              {locations.map((loc) => (
-                <option key={loc.id} value={loc.id}>
-                  {loc.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Sublocation
-            <select
-              name="sublocationId"
-              value={sublocationId}
-              onChange={(e) => setSublocationId(e.target.value)}
-              required
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="-- Select Location --" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">-- Select Location --</SelectItem>
+                {locations.map((loc) => (
+                  <SelectItem key={loc.id} value={loc.id.toString()}>
+                    {loc.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label>Sublocation</Label>
+            <input type="hidden" name="sublocationId" value={sublocationId} />
+            <Select
+              value={sublocationId || "none"}
+              onValueChange={(v) => setSublocationId(v === "none" ? "" : v)}
             >
-              <option value="">-- Select Sublocation --</option>
-              {sublocations.map((sub) => (
-                <option key={sub.id} value={sub.id}>
-                  {sub.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Category / Tag
-            <input
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="-- Select Sublocation --" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">-- Select Sublocation --</SelectItem>
+                {sublocations.map((sub) => (
+                  <SelectItem key={sub.id} value={sub.id.toString()}>
+                    {sub.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="inv-category">Category / Tag</Label>
+            <Input
+              id="inv-category"
               name="categoryTag"
               value={categoryTag}
               onChange={(e) => setCategoryTag(e.target.value)}
             />
-          </label>
-          <label>
-            Quantity
-            <input
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="inv-quantity">Quantity</Label>
+            <Input
+              id="inv-quantity"
               name="quantity"
               type="number"
               min={1}
               value={quantity}
               onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
             />
-          </label>
-          <button
-            type="submit"
-            className="bg-blue-500 text-white px-4 py-2 rounded mt-2 cursor-pointer"
-          >
+          </div>
+          <Button type="submit">
             {item ? "Update Item" : "Add Item"}
-          </button>
+          </Button>
           {item && (
-            <button
+            <Button
               type="button"
-              className="bg-red-500 text-white px-4 py-2 rounded mt-2 cursor-pointer"
+              variant="destructive"
               onClick={handleDelete}
             >
               Delete Item
-            </button>
+            </Button>
           )}
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

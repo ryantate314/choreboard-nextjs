@@ -3,6 +3,7 @@
 import { Status } from "@prisma/client";
 import { Sprint, Chore, AllChores } from "../../models/chore";
 import { formatRelativeTime } from "../../dateUtils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export interface ChoreBoardProps {
   sprint: Sprint;
@@ -24,14 +25,16 @@ function ChoreBoard({ sprint, handleDrop, handleDragStart, openModal }: ChoreBoa
     <>
       <div className="flex flex-row gap-4 min-w-full overflow-x-auto">
         {["Backlog", "To Do This Week", "To Do Today", "Done"].map((col) => (
-          <div
+          <Card
             key={col}
-            className="bg-surface-800 rounded p-2 grow basis-1 min-h-[500px] min-w-[150px]"
+            className="grow basis-1 min-h-[500px] min-w-[150px] py-2 gap-2"
             onDragOver={e => e.preventDefault()}
             onDrop={() => handleDrop(col)}
           >
-            <h2 className="font-bold mb-2">{col}</h2>
-            <div className="flex flex-col gap-2">
+            <CardHeader className="px-3 py-0">
+              <CardTitle>{col}</CardTitle>
+            </CardHeader>
+            <CardContent className="px-3 py-0 flex flex-col gap-2">
               {col === "Backlog" && chores.filter(c => c.status === Status.BACKLOG).length === 0 && (
                 <span className="text-on-surface">No chores</span>
               )}
@@ -79,8 +82,8 @@ function ChoreBoard({ sprint, handleDrop, handleDragStart, openModal }: ChoreBoa
                         </div>}
                     </div>
                   ))}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
     </>

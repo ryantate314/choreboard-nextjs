@@ -1,8 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Plus, X } from "lucide-react";
 import { Chore, AllChores } from "../../models/chore";
 import ChoreForm from "./choreForm";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface SearchResultsProps {
   results: Chore[];
@@ -15,18 +19,20 @@ function SearchResults({ results, showModal, handleDragStart }: SearchResultsPro
     <div className="flex flex-row gap-2">
       {results.length === 0 && <div className="text-gray-400">No matching chores</div>}
       {results.map((c) => (
-        <div
+        <Card
           key={c.id}
-          className="bg-surface-500 text-on-surface border rounded p-2 cursor-pointer"
+          className="cursor-pointer py-2"
           onClick={() => showModal(c)}
           draggable
           onDragStart={() => handleDragStart(c)}
         >
-          <div className="font-semibold">{c.name}</div>
-          { c.description && <div className="text-xs">{c.description}</div> }
-          { c.recurrence && <div className="text-xs">{c.recurrence}</div> }
-          { c.lastCompletion && <div className="text-xs">Last Completed on: {c.lastCompletion.completedAt.toLocaleDateString()}</div> }
-        </div>
+          <CardContent className="px-3 py-0">
+            <div className="font-semibold">{c.name}</div>
+            { c.description && <div className="text-xs">{c.description}</div> }
+            { c.recurrence && <div className="text-xs">{c.recurrence}</div> }
+            { c.lastCompletion && <div className="text-xs">Last Completed on: {c.lastCompletion.completedAt.toLocaleDateString()}</div> }
+          </CardContent>
+        </Card>
       ))}
     </div>
   )
@@ -84,25 +90,27 @@ export default function ChoreSearch({ chores, handleDragStart, openModal }: Chor
           ))}
         </ul>
         <div className="flex flex-row gap-1">
-          <input
-            className="border lg:ml-auto px-2 py-1 rounded"
+          <Input
+            className="lg:ml-auto"
             placeholder="Search by name..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
           { search &&
-            <button
+            <Button
+              variant="default"
+              size="icon"
               onClick={(() => setSearch(""))}
-              className="bg-primary-500 px-4 py-2 rounded"
             >
-              &times;
-            </button>
+              <X />
+            </Button>
           }
-          <button
-            className="bg-primary-500 text-on-surface px-4 py-2 rounded hover:bg-primary-600 transition-colors"
+          <Button
             onClick={() => setShowFormModal(true)}
             type="button"
-          >+</button>
+          >
+            <Plus />
+          </Button>
         </div>
         {showFormModal && (
           <ChoreForm closeModal={onCreateModalClosed}/>

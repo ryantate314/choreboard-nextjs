@@ -1,11 +1,21 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Plus, MapPin } from "lucide-react";
 import { InventoryItem, Location } from "../../models/inventory";
 import InventoryList from "./inventoryList";
 import InventoryItemForm from "./inventoryItemForm";
 import LocationManager from "./locationManager";
 import { useFilterParams } from "../hooks/useFilterParams";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export interface InventoryContainerProps {
   items: InventoryItem[];
@@ -54,70 +64,83 @@ export default function InventoryContainer({ items, locations }: InventoryContai
   return (
     <>
       <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:flex-wrap">
-        <input
-          className="border px-2 py-1 rounded"
+        <Input
+          className="sm:w-auto"
           placeholder="Search items..."
           value={search}
           onChange={(e) => setFilter("search", e.target.value)}
         />
-        <select
-          className="border px-2 py-1 rounded"
-          value={locationFilter}
-          onChange={(e) => {
-            setFilters({ locationFilter: e.target.value, sublocationFilter: "" });
+        <Select
+          value={locationFilter || "all"}
+          onValueChange={(v) => {
+            setFilters({ locationFilter: v === "all" ? "" : v, sublocationFilter: "" });
           }}
         >
-          <option value="">All Locations</option>
-          {locations.map((loc) => (
-            <option key={loc.id} value={loc.id}>
-              {loc.name}
-            </option>
-          ))}
-        </select>
-        {filteredSublocations.length > 0 && (
-          <select
-            className="border px-2 py-1 rounded"
-            value={sublocationFilter}
-            onChange={(e) => setFilter("sublocationFilter", e.target.value)}
-          >
-            <option value="">All Sublocations</option>
-            {filteredSublocations.map((sub) => (
-              <option key={sub.id} value={sub.id}>
-                {sub.name}
-              </option>
+          <SelectTrigger className="sm:w-auto">
+            <SelectValue placeholder="All Locations" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Locations</SelectItem>
+            {locations.map((loc) => (
+              <SelectItem key={loc.id} value={loc.id.toString()}>
+                {loc.name}
+              </SelectItem>
             ))}
-          </select>
+          </SelectContent>
+        </Select>
+        {filteredSublocations.length > 0 && (
+          <Select
+            value={sublocationFilter || "all"}
+            onValueChange={(v) => setFilter("sublocationFilter", v === "all" ? "" : v)}
+          >
+            <SelectTrigger className="sm:w-auto">
+              <SelectValue placeholder="All Sublocations" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Sublocations</SelectItem>
+              {filteredSublocations.map((sub) => (
+                <SelectItem key={sub.id} value={sub.id.toString()}>
+                  {sub.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         )}
         {categories.length > 0 && (
-          <select
-            className="border px-2 py-1 rounded"
-            value={categoryFilter}
-            onChange={(e) => setFilter("categoryFilter", e.target.value)}
+          <Select
+            value={categoryFilter || "all"}
+            onValueChange={(v) => setFilter("categoryFilter", v === "all" ? "" : v)}
           >
-            <option value="">All Categories</option>
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="sm:w-auto">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map((cat) => (
+                <SelectItem key={cat} value={cat}>
+                  {cat}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         )}
         <div className="flex gap-1 sm:ml-auto">
-          <button
-            className="bg-primary-500 text-on-surface px-4 py-2 rounded hover:bg-primary-600 transition-colors"
+          <Button
             onClick={() => {
               setEditItem(null);
               setShowItemForm(true);
             }}
           >
-            + Item
-          </button>
-          <button
-            className="bg-primary-500 text-on-surface px-4 py-2 rounded hover:bg-primary-600 transition-colors"
+            <Plus className="size-4" />
+            Item
+          </Button>
+          <Button
+            variant="secondary"
             onClick={() => setShowLocationManager(true)}
           >
+            <MapPin className="size-4" />
             Locations
-          </button>
+          </Button>
         </div>
       </div>
       <InventoryList items={filteredItems} onEdit={openEditForm} />
