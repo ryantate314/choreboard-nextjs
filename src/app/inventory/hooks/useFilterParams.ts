@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
 import { useCallback, useMemo } from "react";
 
 const PARAM_MAP = {
@@ -21,7 +21,6 @@ export interface Filters {
 
 export function useFilterParams() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const pathname = usePathname();
 
   const filters: Filters = useMemo(
@@ -34,7 +33,7 @@ export function useFilterParams() {
     [searchParams],
   );
 
-  const buildQuery = useCallback(
+  const buildUrl = useCallback(
     (updates: Partial<Filters>) => {
       const params = new URLSearchParams(searchParams.toString());
       for (const [key, value] of Object.entries(updates)) {
@@ -53,16 +52,16 @@ export function useFilterParams() {
 
   const setFilter = useCallback(
     (key: FilterKey, value: string) => {
-      router.replace(buildQuery({ [key]: value }), { scroll: false });
+      window.history.replaceState(null, "", buildUrl({ [key]: value }));
     },
-    [router, buildQuery],
+    [buildUrl],
   );
 
   const setFilters = useCallback(
     (updates: Partial<Filters>) => {
-      router.replace(buildQuery(updates), { scroll: false });
+      window.history.replaceState(null, "", buildUrl(updates));
     },
-    [router, buildQuery],
+    [buildUrl],
   );
 
   return { filters, setFilter, setFilters };
