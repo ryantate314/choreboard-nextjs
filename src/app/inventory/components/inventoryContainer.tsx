@@ -5,6 +5,7 @@ import { InventoryItem, Location } from "../../models/inventory";
 import InventoryList from "./inventoryList";
 import InventoryItemForm from "./inventoryItemForm";
 import LocationManager from "./locationManager";
+import { useFilterParams } from "../hooks/useFilterParams";
 
 export interface InventoryContainerProps {
   items: InventoryItem[];
@@ -12,10 +13,8 @@ export interface InventoryContainerProps {
 }
 
 export default function InventoryContainer({ items, locations }: InventoryContainerProps) {
-  const [search, setSearch] = useState("");
-  const [locationFilter, setLocationFilter] = useState("");
-  const [sublocationFilter, setSublocationFilter] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const { filters, setFilter, setFilters } = useFilterParams();
+  const { search, locationFilter, sublocationFilter, categoryFilter } = filters;
 
   const [showItemForm, setShowItemForm] = useState(false);
   const [editItem, setEditItem] = useState<InventoryItem | null>(null);
@@ -59,14 +58,13 @@ export default function InventoryContainer({ items, locations }: InventoryContai
           className="border px-2 py-1 rounded"
           placeholder="Search items..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => setFilter("search", e.target.value)}
         />
         <select
           className="border px-2 py-1 rounded"
           value={locationFilter}
           onChange={(e) => {
-            setLocationFilter(e.target.value);
-            setSublocationFilter("");
+            setFilters({ locationFilter: e.target.value, sublocationFilter: "" });
           }}
         >
           <option value="">All Locations</option>
@@ -80,7 +78,7 @@ export default function InventoryContainer({ items, locations }: InventoryContai
           <select
             className="border px-2 py-1 rounded"
             value={sublocationFilter}
-            onChange={(e) => setSublocationFilter(e.target.value)}
+            onChange={(e) => setFilter("sublocationFilter", e.target.value)}
           >
             <option value="">All Sublocations</option>
             {filteredSublocations.map((sub) => (
@@ -94,7 +92,7 @@ export default function InventoryContainer({ items, locations }: InventoryContai
           <select
             className="border px-2 py-1 rounded"
             value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
+            onChange={(e) => setFilter("categoryFilter", e.target.value)}
           >
             <option value="">All Categories</option>
             {categories.map((cat) => (
@@ -128,6 +126,8 @@ export default function InventoryContainer({ items, locations }: InventoryContai
           item={editItem}
           locations={locations}
           closeModal={closeItemForm}
+          initialLocationId={locationFilter}
+          initialSublocationId={sublocationFilter}
         />
       )}
       {showLocationManager && (

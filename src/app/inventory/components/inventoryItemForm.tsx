@@ -8,9 +8,11 @@ export interface InventoryItemFormProps {
   item: InventoryItem | null;
   locations: Location[];
   closeModal: () => void;
+  initialLocationId?: string;
+  initialSublocationId?: string;
 }
 
-export default function InventoryItemForm({ item, locations, closeModal }: InventoryItemFormProps) {
+export default function InventoryItemForm({ item, locations, closeModal, initialLocationId, initialSublocationId }: InventoryItemFormProps) {
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") closeModal();
@@ -24,10 +26,10 @@ export default function InventoryItemForm({ item, locations, closeModal }: Inven
   const [categoryTag, setCategoryTag] = useState(item?.categoryTag || "");
   const [quantity, setQuantity] = useState(item?.quantity ?? 1);
   const [locationId, setLocationId] = useState(
-    item?.sublocation?.location?.id?.toString() || ""
+    item?.sublocation?.location?.id?.toString() || initialLocationId || ""
   );
   const [sublocationId, setSublocationId] = useState(
-    item?.sublocationId?.toString() || ""
+    item?.sublocationId?.toString() || initialSublocationId || ""
   );
 
   const sublocations = useMemo(() => {
