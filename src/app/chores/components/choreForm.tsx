@@ -1,8 +1,8 @@
 "use client";
 import { FormEvent, useEffect, useState } from "react";
-import { getUsers } from "../actions";
-import { deleteChore, saveChore } from "../actions";
-import { Chore } from "../models/chore";
+import { getUsers } from "../../actions/chores";
+import { deleteChore, saveChore } from "../../actions/chores";
+import { Chore } from "../../models/chore";
 
 export interface ChoreFormProps {
   chore?: Chore;

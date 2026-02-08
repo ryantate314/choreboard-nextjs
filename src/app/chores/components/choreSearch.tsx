@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Chore, AllChores } from "../models/chore";
+import { Chore, AllChores } from "../../models/chore";
 import ChoreForm from "./choreForm";
 
 interface SearchResultsProps {

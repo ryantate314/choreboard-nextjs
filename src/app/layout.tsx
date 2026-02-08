@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Choreboard",
-  description: "Keep track of tasks and chores.",
+  title: "TaterBase",
+  description: "Home management dashboard.",
 };
 
 export default function RootLayout({

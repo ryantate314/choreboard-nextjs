@@ -54,3 +54,35 @@ model ChoreCompletion {
   completedById Int?
   completedBy   User? @relation(fields: [completedById], references: [id])
 }
+
+model Location {
+  id            Int           @id @default(autoincrement())
+  name          String        @unique
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  sublocations  Sublocation[]
+}
+
+model Sublocation {
+  id            Int              @id @default(autoincrement())
+  name          String
+  locationId    Int
+  location      Location         @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  items         InventoryItem[]
+
+  @@unique([locationId, name])
+}
+
+model InventoryItem {
+  id              Int          @id @default(autoincrement())
+  name            String
+  description     String?
+  categoryTag     String?
+  quantity        Int          @default(1)
+  sublocationId   Int
+  sublocation     Sublocation  @relation(fields: [sublocationId], references: [id], onDelete: Cascade)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}

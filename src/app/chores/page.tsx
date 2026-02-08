@@ -1,0 +1,26 @@
+import { Suspense } from "react";
+import { getAllChores, getSprint } from "../actions/chores";
+import ChoreBoardContainer from "./components/choreBoardContainer";
+import NavBar from "../components/navBar";
+import SprintNav from "./components/sprintNav";
+
+
+type Params = Promise<{ weekStart?: string }>;
+
+export default async function ChoresPage({ searchParams }: { searchParams: Params }) {
+  const params = (await searchParams);
+  const weekStart = params.weekStart ? new Date(params.weekStart) : new Date();
+  const sprint = await getSprint({ weekStart: weekStart });
+  const allChores = await getAllChores();
+
+  return (
+    <div>
+      <NavBar><SprintNav sprintStart={sprint.start} /></NavBar>
+      <div className="flex flex-col pl-4 pr-4 pb-4 w-full max-w-5xl mx-auto">
+        <Suspense fallback={<div>Loading...</div>}>
+          <ChoreBoardContainer sprint={sprint} allChores={allChores} />
+        </Suspense>
+      </div>
+    </div>
+  );
+}

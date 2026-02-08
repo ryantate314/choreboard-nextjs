@@ -1,11 +1,11 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Sprint, Chore, AllChores } from "../models/chore";
+import { Sprint, Chore, AllChores } from "../../models/chore";
 import ChoreBoard from "./choreBoard";
 import ChoreSearch from "./choreSearch";
 import { Status } from "@prisma/client";
-import { deleteCompletion, updateChoreStatus } from "../actions";
+import { deleteCompletion, updateChoreStatus } from "../../actions/chores";
 import ChoreModal from "./choreModal";
 import ChoreForm from "./choreForm";
 

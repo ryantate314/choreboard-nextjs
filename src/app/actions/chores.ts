@@ -1,9 +1,9 @@
 "use server";
 
-import { prisma } from "./prisma";
+import { prisma } from "../prisma";
 import { revalidatePath } from "next/cache";
-import { Chore, Sprint } from "./models/chore";
-import { mapToChore, mapToCompletion } from "./models/mappers";
+import { Chore, Sprint } from "../models/chore";
+import { mapToChore, mapToCompletion } from "../models/mappers";
 import { Prisma, Status, User } from "@prisma/client";
 import { cache } from "react";
 
@@ -52,7 +52,7 @@ export async function saveChore(formData: FormData) {
       },
     });
   }
-  revalidatePath("/");
+  revalidatePath("/chores");
   return mapToChore(result);
 }
 
@@ -94,7 +94,7 @@ export async function deleteCompletion(id: number, newStatus?: Status | null) {
         status: newStatus,
       },
     });
-  revalidatePath("/");
+  revalidatePath("/chores");
 }
 
 async function getChore(id: number): Promise<Chore | null> {
@@ -123,7 +123,7 @@ export async function updateChoreStatus(id: number, status: Status | null, compl
       data: { status },
     });
   }
-  revalidatePath("/");
+  revalidatePath("/chores");
 }
 
 export async function completeChore(id: number, completedDate?: Date) {
@@ -143,7 +143,7 @@ export async function completeChore(id: number, completedDate?: Date) {
       status: chore.recurrence ? Status.BACKLOG : null,
     },
   });
-  revalidatePath("/");
+  revalidatePath("/chores");
 }
 
 function getMonday(date: Date) {
@@ -206,7 +206,7 @@ export async function deleteChore(id: number) {
       deletedAt: new Date(),
     },
   });
-  revalidatePath("/");
+  revalidatePath("/chores");
 }
 
 export const getUsers = cache(async (): Promise<User[]> => {

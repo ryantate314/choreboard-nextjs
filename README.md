@@ -1,6 +1,6 @@
-# Chore Board
+# TaterBase
 
-This application is a NextJS web-app used to keep track of common chores at home.
+A Next.js home management dashboard for tracking chores, inventory, and more.
 
 ## Development
 
@@ -18,7 +18,7 @@ This application is a NextJS web-app used to keep track of common chores at home
 
 2. Create a `.env` file with your database connection:
    ```
-   DATABASE_URL="postgresql://user:password@localhost:5432/choreboard"
+   DATABASE_URL="postgresql://user:password@localhost:5432/taterbase"
    ```
 
 3. Run database migrations and seed:

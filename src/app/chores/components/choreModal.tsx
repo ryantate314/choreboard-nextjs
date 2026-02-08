@@ -1,11 +1,11 @@
 "use client";
 
 import { Status } from "@prisma/client";
-import { AllChores, Chore, ChoreCompletion } from "../models/chore";
-import { deleteCompletion, updateChoreStatus } from "../actions";
+import { AllChores, Chore, ChoreCompletion } from "../../models/chore";
+import { deleteCompletion, updateChoreStatus } from "../../actions/chores";
 import { useEffect, useState } from "react";
 import { RRule } from "rrule";
-import { formatRelativeTime } from "../dateUtils";
+import { formatRelativeTime } from "../../dateUtils";
 
 export interface ChoreModalProps {
   item: AllChores;

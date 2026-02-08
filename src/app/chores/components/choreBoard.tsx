@@ -1,8 +1,8 @@
 "use client";
 
 import { Status } from "@prisma/client";
-import { Sprint, Chore, AllChores } from "../models/chore";
-import { formatRelativeTime } from "../dateUtils";
+import { Sprint, Chore, AllChores } from "../../models/chore";
+import { formatRelativeTime } from "../../dateUtils";
 
 export interface ChoreBoardProps {
   sprint: Sprint;

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Choreboard is a Next.js household chore tracking app with Kanban-style task boards, recurring task support, and sprint/weekly planning.
+TaterBase is a multi-module Next.js home management dashboard. Current modules: **Chores** (Kanban-style task board with recurring tasks and sprint planning) and **Inventory** (home item tracking with locations and categories).
 
 **Stack**: Next.js 15 (App Router), React 19, TypeScript, Prisma ORM, PostgreSQL, Tailwind CSS 4
 
@@ -21,35 +21,61 @@ npx prisma db seed   # Seed database with default users
 
 ## Architecture
 
-### Server vs Client Split
-- `src/app/page.tsx` - Server component that fetches Sprint and chore data
-- `src/app/components/` - Client components (`"use client"`) for interactivity
-- `src/app/actions.ts` - Server actions for all database mutations, uses `revalidatePath("/")` to refresh
+### Multi-Module Structure
 
-### Key Domain Concepts
+The app is organized into modules under `src/app/`. The root `/` redirects to `/chores`. Each module has its own route directory with a `page.tsx` (server component) and `components/` directory (client components).
+
+```
+src/app/
+  page.tsx                          # Root redirect → /chores
+  layout.tsx                        # Shared root layout
+  components/navBar.tsx             # Shared app-level nav bar
+  actions/chores.ts                 # Chore server actions
+  actions/inventory.ts              # Inventory server actions
+  models/                           # Shared domain interfaces & mappers
+  chores/                           # Chores module (/chores route)
+    page.tsx                        # Server component
+    components/                     # Client components
+  inventory/                        # Inventory module (/inventory route)
+    page.tsx                        # Server component
+    components/                     # Client components
+```
+
+### Server vs Client Split
+- `src/app/chores/page.tsx` - Server component that fetches Sprint and chore data
+- `src/app/inventory/page.tsx` - Server component that fetches inventory data
+- `src/app/*/components/` - Client components (`"use client"`) for interactivity
+- `src/app/actions/chores.ts` - Chore server actions, uses `revalidatePath("/chores")`
+- `src/app/actions/inventory.ts` - Inventory server actions, uses `revalidatePath("/inventory")`
+
+### Chores Module
 - **Sprint**: Weekly planning window (Monday-Sunday)
 - **Chore**: Reusable chore template with optional recurrence (RRule/iCalendar format)
 - **ChoreCompletion**: Individual completion record with timestamp
 - **Status**: BACKLOG → THIS_WEEK → TODAY → DONE (soft delete via `deletedAt`)
 
-### Data Models (`src/app/models/chore.ts`)
-Core TypeScript interfaces for Sprint, Chore, ChoreCompletion, and User entities. Includes `STATUS_TRANSITIONS` defining valid state changes.
+### Inventory Module
+- **Location**: A room or area (e.g., "Kitchen", "Garage")
+- **Sublocation**: A specific spot within a location (e.g., "Top Shelf", "Under Sink")
+- **InventoryItem**: A tracked item with name, description, category tag, quantity, stored in a sublocation
+- Hard deletes with cascade (no soft delete)
 
 ### Database Schema (`prisma/schema.prisma`)
-- User → Chore (1:many as responsible person)
-- User → ChoreCompletion (1:many as completedBy)
-- Chore → ChoreCompletion (1:many completion history)
+- User → Chore (1:many), User → ChoreCompletion (1:many)
+- Chore → ChoreCompletion (1:many)
+- Location → Sublocation (1:many, cascade delete)
+- Sublocation → InventoryItem (1:many, cascade delete)
 
 ### Recurrence System
 Uses the `rrule` library for recurring chores. Next due date calculated from last completion. RRule format follows iCalendar spec.
 
-## Key Files
+## How to Add a New Module
 
-- `src/app/actions.ts` - All server actions (saveChore, updateChoreStatus, completeChore, etc.)
-- `src/app/components/choreBoardContainer.tsx` - Main container with drag/drop and modal state
-- `src/app/components/choreBoard.tsx` - Kanban columns rendering
-- `src/app/components/choreForm.tsx` - Create/edit modal with RRule support
-- `src/app/models/mappers.ts` - Prisma to domain model mapping
+1. Create `src/app/<module>/page.tsx` (server component) and `src/app/<module>/components/` (client components)
+2. Add domain interfaces in `src/app/models/<module>.ts` and mappers in `src/app/models/<module>Mappers.ts`
+3. Add server actions in `src/app/actions/<module>.ts` with `revalidatePath("/<module>")`
+4. Add Prisma models to `prisma/schema.prisma` and run migration
+5. Add nav link in `src/app/components/navBar.tsx`
 
 ## Environment Variables
 
