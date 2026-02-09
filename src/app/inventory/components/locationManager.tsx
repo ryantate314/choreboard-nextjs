@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 import { X } from "lucide-react";
 import { Location } from "../../models/inventory";
 import {
@@ -155,7 +156,13 @@ export default function LocationManager({ locations, closeModal }: LocationManag
                     className="flex items-center justify-between p-2 bg-surface-800 rounded"
                   >
                     <span>
-                      {sub.name}{" "}
+                      <Link
+                        href={`/inventory/sublocation/${sub.id}`}
+                        className="hover:text-gray-200 underline"
+                        onClick={() => closeModal()}
+                      >
+                        {sub.name}
+                      </Link>{" "}
                       {sub.itemCount !== undefined && (
                         <span className="text-xs text-gray-400">
                           ({sub.itemCount} item{sub.itemCount !== 1 ? "s" : ""})

@@ -34,6 +34,7 @@ COPY --from=builder /app/node_modules/@prisma/engines ./node_modules/@prisma/eng
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
+RUN mkdir -p /data/uploads && chown nextjs:nodejs /data/uploads
 USER nextjs
 
 EXPOSE 3000

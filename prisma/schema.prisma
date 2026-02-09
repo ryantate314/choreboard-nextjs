@@ -66,6 +66,7 @@ model Location {
 model Sublocation {
   id            Int              @id @default(autoincrement())
   name          String
+  photoPath     String?
   locationId    Int
   location      Location         @relation(fields: [locationId], references: [id], onDelete: Cascade)
   createdAt     DateTime         @default(now())

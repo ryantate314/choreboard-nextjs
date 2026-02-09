@@ -33,6 +33,7 @@ export function mapToSublocation(sublocation: SublocationWithLocation): Sublocat
     id: sublocation.id,
     name: sublocation.name,
     locationId: sublocation.locationId,
+    photoPath: sublocation.photoPath,
     location: sublocation.location
       ? { id: sublocation.location.id, name: sublocation.location.name, sublocations: [] }
       : undefined,

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { InventoryItem } from "../../models/inventory";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +31,14 @@ export default function InventoryList({ items, onEdit }: InventoryListProps) {
                   <div className="text-sm text-gray-400">{item.description}</div>
                 )}
                 <div className="text-xs text-gray-400 mt-1">
-                  {item.sublocation?.location?.name} &rsaquo; {item.sublocation?.name}
+                  {item.sublocation?.location?.name} &rsaquo;{" "}
+                  <Link
+                    href={`/inventory/sublocation/${item.sublocationId}`}
+                    className="hover:text-gray-200 underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {item.sublocation?.name}
+                  </Link>
                 </div>
               </div>
               <div className="flex items-center gap-2">

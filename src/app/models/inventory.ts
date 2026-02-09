@@ -8,6 +8,7 @@ export interface Sublocation {
   id: number;
   name: string;
   locationId: number;
+  photoPath?: string | null;
   location?: Location;
   itemCount?: number;
 }
