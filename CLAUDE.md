@@ -39,6 +39,12 @@ src/app/
   inventory/                        # Inventory module (/inventory route)
     page.tsx                        # Server component
     components/                     # Client components
+    hooks/useFilterParams.ts        # Filter persistence via URL query params
+    sublocation/[id]/               # Sublocation detail page
+      page.tsx                      # Server component
+      components/                   # Detail view, photo upload, items list
+  api/uploads/[filename]/route.ts   # Serves uploaded photos from filesystem
+  lib/uploads.ts                    # Upload helpers (validation, storage)
 ```
 
 ### Server vs Client Split
@@ -56,9 +62,11 @@ src/app/
 
 ### Inventory Module
 - **Location**: A room or area (e.g., "Kitchen", "Garage")
-- **Sublocation**: A specific spot within a location (e.g., "Top Shelf", "Under Sink")
+- **Sublocation**: A specific spot within a location (e.g., "Top Shelf", "Under Sink"); supports optional photo
 - **InventoryItem**: A tracked item with name, description, category tag, quantity, stored in a sublocation
 - Hard deletes with cascade (no soft delete)
+- **Filter persistence**: Filters (search, location, sublocation, category) persist to URL query params via `useFilterParams` hook using `history.replaceState()` (avoids Next.js router re-renders)
+- **Sublocation detail page** (`/inventory/sublocation/[id]`): Shows items in a sublocation with photo upload/delete and breadcrumb navigation
 
 ### Database Schema (`prisma/schema.prisma`)
 - User → Chore (1:many), User → ChoreCompletion (1:many)
@@ -77,11 +85,27 @@ Uses the `rrule` library for recurring chores. Next due date calculated from las
 4. Add Prisma models to `prisma/schema.prisma` and run migration
 5. Add nav link in `src/app/components/navBar.tsx`
 
+### Photo Upload System
+- Filesystem-based storage via `src/lib/uploads.ts`, served through `/api/uploads/[filename]`
+- Validation: file type whitelist (JPEG, PNG, WebP, GIF), 10MB size limit, strict filename regex
+- Server actions body size limit set to 10MB in `next.config.ts`
+
 ## Environment Variables
 
 - `DATABASE_URL` - PostgreSQL connection string (required)
+- `UPLOAD_DIR` - Photo storage directory (defaults to `./uploads`)
 - `NEXT_PUBLIC_BASE_PATH` - Optional base path for subpath deployments
 - `NEXT_PUBLIC_ASSET_PREFIX` - Optional asset prefix
+
+## UI Components (shadcn/ui)
+
+Uses [shadcn/ui](https://ui.shadcn.com) (new-york style, neutral base color, Lucide icons). Components live in `src/components/ui/`. **Do not create or edit these files by hand** — always use the CLI to add new components:
+
+```bash
+npx shadcn@latest add <component>   # e.g. npx shadcn@latest add button
+```
+
+Currently installed: badge, button, card, dialog, dropdown-menu, input, label, select, separator.
 
 ## Styling
 
