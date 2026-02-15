@@ -219,6 +219,19 @@ export async function saveSublocation(formData: FormData) {
   revalidatePath("/inventory");
 }
 
+export async function exportInventory() {
+  const locations = await prisma.location.findMany({
+    include: {
+      sublocations: {
+        include: { items: true },
+        orderBy: { name: "asc" },
+      },
+    },
+    orderBy: { name: "asc" },
+  });
+  return locations;
+}
+
 export async function deleteSublocation(id: number) {
   // Clean up photo file before deleting
   const sub = await prisma.sublocation.findUnique({

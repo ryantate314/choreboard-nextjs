@@ -1,14 +1,21 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, MapPin } from "lucide-react";
+import { Plus, MapPin, Ellipsis, Download } from "lucide-react";
 import { InventoryItem, Location } from "../../models/inventory";
 import InventoryList from "./inventoryList";
 import InventoryItemForm from "./inventoryItemForm";
 import LocationManager from "./locationManager";
 import { useFilterParams } from "../hooks/useFilterParams";
+import { exportInventory } from "../../actions/inventory";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -59,6 +66,17 @@ export default function InventoryContainer({ items, locations }: InventoryContai
   function closeItemForm() {
     setShowItemForm(false);
     setEditItem(null);
+  }
+
+  async function handleExport() {
+    const data = await exportInventory();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "taterbase-inventory-export.json";
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   return (
@@ -141,6 +159,19 @@ export default function InventoryContainer({ items, locations }: InventoryContai
             <MapPin className="size-4" />
             Locations
           </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Ellipsis className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleExport}>
+                <Download className="size-4" />
+                Export
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
       <InventoryList items={filteredItems} onEdit={openEditForm} />
