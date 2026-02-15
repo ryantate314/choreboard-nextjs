@@ -1,8 +1,9 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { InventoryItem, Location } from "../../models/inventory";
+import { InventoryItem } from "../../models/inventory";
 import { saveInventoryItem, deleteInventoryItem } from "../../actions/inventory";
+import { useLocations } from "../hooks/useLocations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,13 +24,13 @@ import {
 
 export interface InventoryItemFormProps {
   item: InventoryItem | null;
-  locations: Location[];
   closeModal: () => void;
   initialLocationId?: string;
   initialSublocationId?: string;
 }
 
-export default function InventoryItemForm({ item, locations, closeModal, initialLocationId, initialSublocationId }: InventoryItemFormProps) {
+export default function InventoryItemForm({ item, closeModal, initialLocationId, initialSublocationId }: InventoryItemFormProps) {
+  const { locations } = useLocations();
   const [name, setName] = useState(item?.name || "");
   const [description, setDescription] = useState(item?.description || "");
   const [categoryTag, setCategoryTag] = useState(item?.categoryTag || "");

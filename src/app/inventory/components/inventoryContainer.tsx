@@ -2,11 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { Plus, MapPin, Ellipsis, Download } from "lucide-react";
+import { SWRConfig } from "swr";
 import { InventoryItem, Location } from "../../models/inventory";
 import InventoryList from "./inventoryList";
 import InventoryItemForm from "./inventoryItemForm";
 import LocationManager from "./locationManager";
 import { useFilterParams } from "../hooks/useFilterParams";
+import { useLocations, LOCATIONS_KEY } from "../hooks/useLocations";
 import { exportInventory } from "../../actions/inventory";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +31,16 @@ export interface InventoryContainerProps {
   locations: Location[];
 }
 
-export default function InventoryContainer({ items, locations }: InventoryContainerProps) {
+export default function InventoryContainer({ items, locations: serverLocations }: InventoryContainerProps) {
+  return (
+    <SWRConfig value={{ fallback: { [LOCATIONS_KEY]: serverLocations } }}>
+      <InventoryContainerInner items={items} />
+    </SWRConfig>
+  );
+}
+
+function InventoryContainerInner({ items }: { items: InventoryItem[] }) {
+  const { locations } = useLocations();
   const { filters, setFilter, setFilters } = useFilterParams();
   const { search, locationFilter, sublocationFilter, categoryFilter } = filters;
 
@@ -178,7 +189,6 @@ export default function InventoryContainer({ items, locations }: InventoryContai
       {showItemForm && (
         <InventoryItemForm
           item={editItem}
-          locations={locations}
           closeModal={closeItemForm}
           initialLocationId={locationFilter}
           initialSublocationId={sublocationFilter}
@@ -186,7 +196,6 @@ export default function InventoryContainer({ items, locations }: InventoryContai
       )}
       {showLocationManager && (
         <LocationManager
-          locations={locations}
           closeModal={() => setShowLocationManager(false)}
         />
       )}

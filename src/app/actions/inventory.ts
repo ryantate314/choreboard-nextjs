@@ -7,7 +7,6 @@ import { revalidatePath } from "next/cache";
 import { InventoryItem, Location, Sublocation } from "../models/inventory";
 import {
   mapToInventoryItem,
-  mapToLocation,
   mapToSublocation,
 } from "../models/inventoryMappers";
 import { UPLOAD_DIR } from "@/lib/uploads";
@@ -27,18 +26,8 @@ export async function getInventoryItems(): Promise<InventoryItem[]> {
 }
 
 export async function getLocations(): Promise<Location[]> {
-  const locations = await prisma.location.findMany({
-    include: {
-      sublocations: {
-        include: {
-          _count: { select: { items: true } },
-        },
-        orderBy: { name: "asc" },
-      },
-    },
-    orderBy: { name: "asc" },
-  });
-  return locations.map((loc) => mapToLocation(loc));
+  const { fetchLocations } = await import("../lib/inventory-queries");
+  return fetchLocations();
 }
 
 export async function getSublocationDetail(
