@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, X } from "lucide-react";
-import { Chore, AllChores } from "../../models/chore";
+import { Plus, X, Check } from "lucide-react";
+import { Chore } from "../../models/chore";
+import { quickComplete } from "../../actions/chores";
 import ChoreForm from "./choreForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,82 +11,96 @@ import { Card, CardContent } from "@/components/ui/card";
 
 interface SearchResultsProps {
   results: Chore[];
-  showModal: (chore: Chore) => void;
-  handleDragStart: (item: AllChores) => void;
+  onQuickComplete: (choreId: number) => void;
+  onEdit: (chore: Chore) => void;
 }
 
-function SearchResults({ results, showModal, handleDragStart }: SearchResultsProps) {
+function SearchResults({ results, onQuickComplete, onEdit }: SearchResultsProps) {
   return (
-    <div className="flex flex-row gap-2">
+    <div className="flex flex-row gap-2 flex-wrap">
       {results.length === 0 && <div className="text-gray-400">No matching chores</div>}
       {results.map((c) => (
-        <Card
-          key={c.id}
-          className="cursor-pointer py-2"
-          onClick={() => showModal(c)}
-          draggable
-          onDragStart={() => handleDragStart(c)}
-        >
-          <CardContent className="px-3 py-0">
-            <div className="font-semibold">{c.name}</div>
-            { c.description && <div className="text-xs">{c.description}</div> }
-            { c.recurrence && <div className="text-xs">{c.recurrence}</div> }
-            { c.lastCompletion && <div className="text-xs">Last Completed on: {c.lastCompletion.completedAt.toLocaleDateString()}</div> }
+        <Card key={c.id} className="py-2 cursor-pointer hover:bg-surface-700" onClick={() => onEdit(c)}>
+          <CardContent className="px-3 py-0 flex items-center gap-2">
+            <div>
+              <div className="font-semibold">{c.name}</div>
+              {c.description && <div className="text-xs">{c.description}</div>}
+              {c.recurrence && <div className="text-xs text-gray-500">{c.recurrence}</div>}
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="ml-auto"
+              onClick={(e) => { e.stopPropagation(); onQuickComplete(c.id); }}
+              title="Quick complete"
+            >
+              <Check className="h-4 w-4" />
+            </Button>
           </CardContent>
         </Card>
       ))}
     </div>
-  )
+  );
 }
 
 export interface ChoreSearchProps {
   chores: Chore[];
-  handleDragStart: (item: AllChores) => void;
-  openModal: (item: AllChores) => void;
 }
 
-export default function ChoreSearch({ chores, handleDragStart, openModal }: ChoreSearchProps) {
+export default function ChoreSearch({ chores }: ChoreSearchProps) {
   const [search, setSearch] = useState("");
   const [showFormModal, setShowFormModal] = useState(false);
+  const [editChore, setEditChore] = useState<Chore | null>(null);
 
-  const recentChores = useMemo(() => {
+  const recentOneOffChores = useMemo(() => {
     return chores
       .filter((c) => c.recurrence === null)
-      .sort((a, b) => (b.lastCompletion?.completedAt?.getTime() ?? 0) - (a.lastCompletion?.completedAt?.getTime() ?? 0))
       .slice(0, 4);
   }, [chores]);
 
-  // Only non-recurring (one-off) chores
   const filtered = useMemo(() => {
     return chores
       .filter((c) => c.name.toLowerCase().includes(search.toLowerCase()))
-      .sort((a, b) => a.name < b.name ? -1 : 1)
+      .sort((a, b) => a.name < b.name ? -1 : 1);
   }, [chores, search]);
 
-  function showModal(chore: Chore) {
-    openModal(chore);
+  async function handleQuickComplete(choreId: number) {
+    await quickComplete(choreId);
   }
 
-  function onCreateModalClosed(result?: Chore) {
+  function handleEdit(chore: Chore) {
+    setEditChore(chore);
+  }
+
+  function onFormModalClosed() {
     setShowFormModal(false);
-    // If the chore was created, open the modal.
-    if (result)
-      openModal(result);
+    setEditChore(null);
   }
-
 
   return (
     <div className="search-form">
       <div className="mb-4 flex flex-col-reverse gap-4 justify-between lg:flex-row lg:items-center">
         <ul className="hidden sm:flex flex-row gap-2 grow">
-          {!search && recentChores.map((c) => (
-            <li key={c.id}
-              className="bg-surface-500 text-on-surface border rounded p-2 cursor-pointer whitespace-nowrap overflow-ellipsis text-center"
-              draggable
-              onDragStart={() => handleDragStart(c)}
-              onClick={() => showModal(c)}
+          {!search && recentOneOffChores.map((c) => (
+            <li 
+              key={c.id}
+              className="bg-surface-500 text-on-surface border rounded p-2 flex items-center gap-2"
             >
-              <div className="font-semibold">{c.name}</div>
+              <div 
+                className="font-semibold whitespace-nowrap cursor-pointer hover:underline"
+                onClick={() => handleEdit(c)}
+              >
+                {c.name}
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="p-1 h-auto"
+                onClick={() => handleQuickComplete(c.id)}
+                title="Quick complete"
+              >
+                <Check className="h-4 w-4" />
+              </Button>
             </li>
           ))}
         </ul>
@@ -96,29 +111,29 @@ export default function ChoreSearch({ chores, handleDragStart, openModal }: Chor
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
-          { search &&
+          {search && (
             <Button
               variant="default"
               size="icon"
-              onClick={(() => setSearch(""))}
+              onClick={() => setSearch("")}
             >
               <X />
             </Button>
-          }
-          <Button
-            onClick={() => setShowFormModal(true)}
-            type="button"
-          >
+          )}
+          <Button onClick={() => setShowFormModal(true)} type="button">
             <Plus />
           </Button>
         </div>
         {showFormModal && (
-          <ChoreForm closeModal={onCreateModalClosed}/>
+          <ChoreForm closeModal={onFormModalClosed} />
+        )}
+        {editChore && (
+          <ChoreForm chore={editChore} closeModal={onFormModalClosed} />
         )}
       </div>
-      { search && (
+      {search && (
         <div className="mb-4">
-          <SearchResults results={filtered} showModal={showModal} handleDragStart={handleDragStart} />
+          <SearchResults results={filtered} onQuickComplete={handleQuickComplete} onEdit={handleEdit} />
         </div>
       )}
     </div>

@@ -1,92 +1,99 @@
 "use client";
 
+import { useMemo } from "react";
 import { Status } from "@prisma/client";
-import { Sprint, Chore, AllChores } from "../../models/chore";
+import { Sprint, SprintItem } from "../../models/chore";
 import { formatRelativeTime } from "../../dateUtils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export interface ChoreBoardProps {
   sprint: Sprint;
   handleDrop: (col: string) => void;
-  handleDragStart: (item: AllChores) => void;
-  openModal: (item: AllChores) => void;
+  handleDragStart: (item: SprintItem) => void;
+  openModal: (item: SprintItem) => void;
 }
 
 function ChoreBoard({ sprint, handleDrop, handleDragStart, openModal }: ChoreBoardProps) {
-  const { chores, completions } = sprint;
+  const { items } = sprint;
 
-  function compareNextDueDate(a: Chore, b: Chore): number {
-    const aTime = a.nextDueDate?.getTime() ?? 0;
-    const bTime = b.nextDueDate?.getTime() ?? 0;
+  const now = useMemo(() => new Date(), []);
+
+  const backlog = items.filter(i => !i.completedAt && i.status === Status.BACKLOG);
+  const thisWeek = items.filter(i => !i.completedAt && i.status === Status.THIS_WEEK);
+  const today = items.filter(i => !i.completedAt && i.status === Status.TODAY);
+  const done = items.filter(i => i.completedAt !== null);
+
+  function compareByDueDate(a: SprintItem, b: SprintItem): number {
+    const aTime = a.dueDate?.getTime() ?? 0;
+    const bTime = b.dueDate?.getTime() ?? 0;
     return aTime - bTime;
   }
 
-  return (
-    <>
-      <div className="flex flex-row gap-4 min-w-full overflow-x-auto">
-        {["Backlog", "To Do This Week", "To Do Today", "Done"].map((col) => (
-          <Card
-            key={col}
-            className="grow basis-1 min-h-[500px] min-w-[150px] py-2 gap-2"
-            onDragOver={e => e.preventDefault()}
-            onDrop={() => handleDrop(col)}
+  function getItemKey(item: SprintItem): string {
+    return item.id !== null ? `item-${item.id}` : `virtual-${item.chore.id}`;
+  }
+
+  function renderItem(item: SprintItem) {
+    const isOverdue = item.dueDate && item.dueDate < now;
+    
+    return (
+      <div
+        key={getItemKey(item)}
+        className="bg-surface-800 text-on-surface border rounded p-2 cursor-pointer"
+        draggable
+        onDragStart={() => handleDragStart(item)}
+        onClick={() => openModal(item)}
+      >
+        <div className="font-semibold">{item.chore.name}</div>
+        {item.chore.description && <div className="text-sm">{item.chore.description}</div>}
+        {item.chore.responsibleUser && <div className="text-sm">{item.chore.responsibleUser.firstName}</div>}
+        {item.completedAt ? (
+          <div className="text-xs text-gray-400" title={item.completedAt.toLocaleDateString()}>
+            Completed: {formatRelativeTime(item.completedAt, { handleZero: 'past' })}
+          </div>
+        ) : item.dueDate && (
+          <div 
+            title={item.dueDate.toLocaleDateString()}
+            className={isOverdue ? 'text-red-500' : ''}
           >
-            <CardHeader className="px-3 py-0">
-              <CardTitle>{col}</CardTitle>
-            </CardHeader>
-            <CardContent className="px-3 py-0 flex flex-col gap-2">
-              {col === "Backlog" && chores.filter(c => c.status === Status.BACKLOG).length === 0 && (
-                <span className="text-on-surface">No chores</span>
-              )}
-              {col === "Done" && completions.length === 0 && (
-                <span className="text-on-surface">No completed chores</span>
-              )}
-              {col === "Done"
-                ? completions.map((completion) => (
-                    <div
-                      key={completion.id}
-                      className="text-on-surface border rounded p-2 cursor-pointer"
-                      draggable
-                      onDragStart={() => handleDragStart(completion)}
-                      onClick={() => openModal(completion)}
-                    >
-                      <div className="font-semibold">{completion.chore!.name}</div>
-                      <div className="text-xs text-gray-400" title={completion.completedAt.toLocaleDateString()}>
-                        Completed: {formatRelativeTime(completion.completedAt, { handleZero: 'past' })}
-                      </div>
-                    </div>
-                  ))
-                : chores.filter(c => {
-                    if (col === "Backlog") return c.status === Status.BACKLOG;
-                    if (col === "To Do This Week") return c.status === Status.THIS_WEEK;
-                    if (col === "To Do Today") return c.status === Status.TODAY;
-                    return false;
-                  })
-                  .sort(compareNextDueDate)
-                  .map((chore) => (
-                    <div
-                      key={chore.id}
-                      className="bg-surface-800 text-on-surface border rounded p-2 cursor-pointer"
-                      draggable
-                      onDragStart={() => handleDragStart(chore)}
-                      onClick={() => openModal(chore)}
-                    >
-                      <div className="font-semibold">{chore.name}</div>
-                      {chore.description && <div className="text-sm">{chore.description}</div>}
-                      {chore.responsibleUser && <div className="text-sm">{chore.responsibleUser.firstName}</div>}
-                      {chore.nextDueDate &&
-                        <div title={chore.nextDueDate.toLocaleDateString()}
-                          className={chore.nextDueDate < new Date() ? 'text-red-500' : ''}
-                        >
-                          Due {formatRelativeTime(chore.nextDueDate)}
-                        </div>}
-                    </div>
-                  ))}
-            </CardContent>
-          </Card>
-        ))}
+            Due {formatRelativeTime(item.dueDate)}
+          </div>
+        )}
+        {item.isVirtual && <div className="text-xs text-gray-500 italic">Not yet scheduled</div>}
       </div>
-    </>
+    );
+  }
+
+  const columns = [
+    { name: "Backlog", items: backlog.sort(compareByDueDate) },
+    { name: "To Do This Week", items: thisWeek.sort(compareByDueDate) },
+    { name: "To Do Today", items: today.sort(compareByDueDate) },
+    { name: "Done", items: done },
+  ];
+
+  return (
+    <div className="flex flex-row gap-4 min-w-full overflow-x-auto">
+      {columns.map((col) => (
+        <Card
+          key={col.name}
+          className="grow basis-1 min-h-[500px] min-w-[150px] py-2 gap-2"
+          onDragOver={e => e.preventDefault()}
+          onDrop={() => handleDrop(col.name)}
+        >
+          <CardHeader className="px-3 py-0">
+            <CardTitle>{col.name}</CardTitle>
+          </CardHeader>
+          <CardContent className="px-3 py-0 flex flex-col gap-2">
+            {col.items.length === 0 && (
+              <span className="text-on-surface">
+                {col.name === "Done" ? "No completed chores" : "No chores"}
+              </span>
+            )}
+            {col.items.map(renderItem)}
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
 }
 

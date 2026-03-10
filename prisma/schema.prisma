@@ -16,8 +16,8 @@ model User {
   firstName String
   lastName  String
 
-  Chore           Chore[]
-  ChoreCompletion ChoreCompletion[]
+  Chore          Chore[]
+  ScheduledChore ScheduledChore[]
 }
 
 model Chore {
@@ -27,32 +27,35 @@ model Chore {
   recurrence  String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  status      Status?
   deletedAt   DateTime?
 
   responsibleUserId Int?
   responsibleUser   User? @relation(fields: [responsibleUserId], references: [id])
 
-  ChoreCompletion ChoreCompletion[]
+  ScheduledChore ScheduledChore[]
 }
 
 enum Status {
   BACKLOG
   THIS_WEEK
   TODAY
-  DONE // Only used for API calls, not stored in the database
 }
 
-model ChoreCompletion {
-  id          Int      @id @default(autoincrement())
-  chore       Chore    @relation(fields: [choreId], references: [id])
-  choreId     Int
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  completedAt DateTime
-
+model ScheduledChore {
+  id            Int       @id @default(autoincrement())
+  choreId       Int
+  chore         Chore     @relation(fields: [choreId], references: [id], onDelete: Cascade)
+  dueDate       DateTime?
+  status        Status
+  completedAt   DateTime?
   completedById Int?
-  completedBy   User? @relation(fields: [completedById], references: [id])
+  completedBy   User?     @relation(fields: [completedById], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([choreId])
+  @@index([dueDate])
+  @@index([completedAt])
 }
 
 model Location {
