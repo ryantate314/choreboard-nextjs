@@ -2,7 +2,6 @@ import { Chore, SprintItem } from "./chore";
 import {
   Chore as PrismaChore,
   ScheduledChore as PrismaScheduledChore,
-  Status,
   User,
 } from "@prisma/client";
 import { RRule } from "rrule";
@@ -24,6 +23,9 @@ export function mapToChore(chore: ChoreWithUser): Chore {
     name: chore.name,
     description: chore.description,
     recurrence: chore.recurrence,
+    nextDueDate: chore.nextDueDate,
+    overdueAction: chore.overdueAction,
+    autoSchedule: chore.autoSchedule,
     createdAt: chore.createdAt,
     responsibleUserId: chore.responsibleUserId,
     responsibleUser: chore.responsibleUser,
@@ -38,7 +40,7 @@ export function mapToSprintItem(scheduled: ScheduledChoreWithChore): SprintItem 
     id: scheduled.id,
     chore: mapToChore(scheduled.chore),
     dueDate: scheduled.dueDate,
-    status: scheduled.status,
+    startedAt: scheduled.startedAt,
     completedAt: scheduled.completedAt,
     completedById: scheduled.completedById,
     isVirtual: false,
@@ -100,6 +102,7 @@ export function buildSprintItems(
   
   for (const chore of chores) {
     if (!chore.recurrence) continue;
+    if (!chore.autoSchedule) continue;
     
     const existingForChore = scheduledByChoreId.get(chore.id) ?? [];
     const hasIncompleteInstance = existingForChore.some(s => !s.completedAt);
@@ -114,7 +117,7 @@ export function buildSprintItems(
         id: null,
         chore: mapToChore(chore),
         dueDate: nextDueDate,
-        status: Status.BACKLOG,
+        startedAt: null,
         completedAt: null,
         completedById: null,
         isVirtual: true,

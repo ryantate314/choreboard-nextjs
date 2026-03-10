@@ -1,10 +1,10 @@
 "use client";
 
-import { Status } from "@prisma/client";
 import { Chore, SprintItem } from "../../models/chore";
 import {
   createSprintItem,
-  updateSprintItemStatus,
+  startSprintItem,
+  unstartSprintItem,
   completeSprintItem,
   uncompleteSprintItem,
   deleteSprintItem,
@@ -34,6 +34,8 @@ export default function ChoreModal({ item, closeModal, showEditModal }: ChoreMod
 
   const chore = item.chore;
   const isDone = item.completedAt !== null;
+  const isInProgress = !isDone && item.startedAt !== null;
+  const isTodo = !isDone && !isInProgress;
 
   function recurrenceString() {
     return chore.recurrence ? RRule.fromString(chore.recurrence).toText() : null;
@@ -41,7 +43,7 @@ export default function ChoreModal({ item, closeModal, showEditModal }: ChoreMod
 
   async function handleComplete(completedAt: Date) {
     if (item.isVirtual) {
-      const id = await createSprintItem(chore.id, item.dueDate, Status.TODAY);
+      const id = await createSprintItem(chore.id, item.dueDate);
       await completeSprintItem(id, completedAt);
     } else {
       await completeSprintItem(item.id!, completedAt);
@@ -49,13 +51,26 @@ export default function ChoreModal({ item, closeModal, showEditModal }: ChoreMod
     closeModal();
   }
 
-  async function handleMoveToStatus(status: Status) {
+  async function handleStart() {
     if (item.isVirtual) {
-      await createSprintItem(chore.id, item.dueDate, status);
-    } else if (isDone) {
-      await uncompleteSprintItem(item.id!, status);
+      const id = await createSprintItem(chore.id, item.dueDate);
+      await startSprintItem(id);
     } else {
-      await updateSprintItemStatus(item.id!, status);
+      await startSprintItem(item.id!);
+    }
+    closeModal();
+  }
+
+  async function handleUnstart() {
+    if (!item.isVirtual && item.id !== null) {
+      await unstartSprintItem(item.id);
+    }
+    closeModal();
+  }
+
+  async function handleUncomplete() {
+    if (!item.isVirtual && item.id !== null) {
+      await uncompleteSprintItem(item.id);
     }
     closeModal();
   }
@@ -87,6 +102,9 @@ export default function ChoreModal({ item, closeModal, showEditModal }: ChoreMod
           {chore.recurrence && <div>Repeats: {recurrenceString()}</div>}
           {item.dueDate && (
             <div>Due: {item.dueDate.toLocaleDateString()} ({formatRelativeTime(item.dueDate)})</div>
+          )}
+          {item.startedAt && !isDone && (
+            <div>Started: {item.startedAt.toLocaleString()}</div>
           )}
           {item.completedAt && (
             <div>Completed: {item.completedAt.toLocaleString()}</div>
@@ -129,22 +147,35 @@ export default function ChoreModal({ item, closeModal, showEditModal }: ChoreMod
         )}
         
         <div className="flex flex-col gap-2">
-          {[
-            [Status.BACKLOG, "Backlog"],
-            [Status.THIS_WEEK, "This Week"],
-            [Status.TODAY, "Today"],
-          ]
-            .filter(([status]) => status !== item.status || isDone)
-            .map(([status, label]) => (
-              <Button 
-                variant="secondary" 
-                className="text-lg py-2" 
-                key={status} 
-                onClick={() => handleMoveToStatus(status as Status)}
-              >
-                Move to {label}
-              </Button>
-            ))}
+          {isTodo && (
+            <Button 
+              variant="secondary" 
+              className="text-lg py-2" 
+              onClick={handleStart}
+            >
+              Start Working
+            </Button>
+          )}
+          
+          {isInProgress && (
+            <Button 
+              variant="secondary" 
+              className="text-lg py-2" 
+              onClick={handleUnstart}
+            >
+              Move Back to TODO
+            </Button>
+          )}
+          
+          {isDone && (
+            <Button 
+              variant="secondary" 
+              className="text-lg py-2" 
+              onClick={handleUncomplete}
+            >
+              Mark as Not Done
+            </Button>
+          )}
           
           <Button variant="outline" className="text-lg py-2" onClick={() => showEditModal(chore)}>
             Edit Chore Template

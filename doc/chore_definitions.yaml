@@ -1,96 +1,130 @@
+# Chore Definitions
+#
+# Fields:
+#   name: Display name (required)
+#   recurrence: RRule string in iCalendar format (optional)
+#   description: Additional details (optional)
+#   category: Grouping category (optional)
+#   autoSchedule: If true, automatically appears in sprint when due.
+#                 If false (default), stays in backlog until manually scheduled.
+
 - name: Change HVAC Filters
   recurrence: FREQ=MONTHLY;INTERVAL=3
   category: Home Maintenance
+  autoSchedule: false
 
 - name: Pour Vinegar in HVAC Drain
   recurrence: FREQ=MONTHLY;INTERVAL=1
   category: Home Maintenance
+  autoSchedule: false
 
 - name: Vacuum Fridge Coils
   recurrence: FREQ=MONTHLY;INTERVAL=3
   category: Home Maintenance
+  autoSchedule: false
 
 - name: Test Smoke/CO Detectors
   recurrence: FREQ=MONTHLY;INTERVAL=3
   category: Home Maintenance
+  autoSchedule: false
 
 - name: Inspect Crawlspace Plumbing for Leaks
   recurrence: FREQ=MONTHLY;INTERVAL=6
   category: Home Maintenance
+  autoSchedule: false
 
 - name: Clean Garbage Disposal
   recurrence: FREQ=MONTHLY
   category: Appliances
+  autoSchedule: false
 
 - name: Clean Dishwasher
   recurrence: FREQ=MONTHLY
   description: Remove and clean filter. Place filter on top rack and run with a cleaning tablet.
   category: Appliances
+  autoSchedule: false
 
 - name: Clean Washing Machine
   recurrence: FREQ=MONTHLY
   category: Appliances
+  autoSchedule: false
 
 - name: Clean Microwave Filters
   recurrence: FREQ=MONTHLY;INTERVAL=3
   category: Appliances
+  autoSchedule: false
 
 - name: HVAC Service/cleaning
   recurrence: FREQ=MONTHLY;INTERVAL=6
   category: Home Maintenance
+  autoSchedule: false
 
 - name: Clean Gutters
   recurrence: FREQ=YEARLY;INTERVAL=1;BYMONTH=09
   category: Home Maintenance
+  autoSchedule: false
 
 - name: Oil Garage Door Track, Chain, and Springs
   recurrence: FREQ=YEARLY;INTERVAL=1;BYMONTH=04
   category: Home Maintenance
+  autoSchedule: false
 
 - name: Clean Window Weep Holes
   recurrence: FREQ=YEARLY;INTERVAL=1;BYMONTH=04
   category: Home Maintenance
+  autoSchedule: false
 
 - name: Clean Patio Furniture
   recurrence: FREQ=YEARLY;INTERVAL=1;BYMONTH=04
   category: cleaning
+  autoSchedule: false
 
 - name: Inspect Shingles
   recurrence: FREQ=YEARLY;INTERVAL=1;BYMONTH=04
   category: Home Maintenance
+  autoSchedule: false
 
 - name: Inspect Window Caulking
   recurrence: FREQ=YEARLY;INTERVAL=1;BYMONTH=04
   category: Home Maintenance
+  autoSchedule: false
 
 - name: Inspect Door Caulking
   recurrence: FREQ=YEARLY;INTERVAL=1;BYMONTH=04
   category: Home Maintenance
+  autoSchedule: false
 
 - name: Flush Water Heater
   recurrence: FREQ=YEARLY;INTERVAL=1;BYMONTH=06
   category: Home Maintenance
+  autoSchedule: false
 
 - name: Clean Drier Vent Duct
   recurrence: FREQ=YEARLY;INTERVAL=1;BYMONTH=06
   category: Home Maintenance
+  autoSchedule: false
 
 - name: Wash Windows
   recurrence: FREQ=YEARLY;INTERVAL=1;BYMONTH=04
   category: Cleaning
+  autoSchedule: false
 
 - name: Replace Fridge Water Filters
   recurrence: FREQ=MONTHLY;INTERVAL=6
   category: Home Maintenance
+  autoSchedule: false
 
 - name: Clean Oven
   recurrence: FREQ=YEARLY;INTERVAL=1;BYMONTH=04
   category: Cleaning
+  autoSchedule: false
 
 - name: Replace CO Detector Batteries
   recurrence: FREQ=MONTHLY;INTERVAL=6
   category: Home Maintenance
+  autoSchedule: false
 
 - name: Seal Shower Grout
   recurrence: FREQ=MONTHLY;INTERVAL=6
   category: Home Maintenance
+  autoSchedule: false

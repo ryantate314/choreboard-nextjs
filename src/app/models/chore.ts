@@ -1,4 +1,6 @@
-import { Status, User } from "@prisma/client";
+import { OverdueAction as PrismaOverdueAction, User } from "@prisma/client";
+
+export type OverdueAction = PrismaOverdueAction;
 
 /**
  * Represents a chore template/definition.
@@ -8,6 +10,9 @@ export interface Chore {
   name: string;
   description: string | null;
   recurrence: string | null;
+  nextDueDate: Date | null;
+  overdueAction: OverdueAction;
+  autoSchedule: boolean;
   createdAt: Date;
   responsibleUserId: number | null;
   responsibleUser: User | null;
@@ -15,13 +20,16 @@ export interface Chore {
 
 /**
  * Represents a sprint item - a scheduled instance of a chore.
- * This is the unified type used in ALL Kanban columns.
+ * State derivation:
+ * - startedAt = null, completedAt = null → TODO (grouped by day)
+ * - startedAt set, completedAt = null → In Progress
+ * - completedAt set → Done
  */
 export interface SprintItem {
   id: number | null;
   chore: Chore;
   dueDate: Date | null;
-  status: Status;
+  startedAt: Date | null;
   completedAt: Date | null;
   completedById: number | null;
   isVirtual: boolean;

@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { getAllChores, getSprint } from "../actions/chores";
-import ChoreBoardContainer from "./components/choreBoardContainer";
+import SprintBoardContainer from "./components/sprintBoardContainer";
 import NavBar from "../components/navBar";
 import SprintNav from "./components/sprintNav";
 
@@ -18,7 +18,7 @@ export default async function ChoresPage({ searchParams }: { searchParams: Param
       <NavBar><SprintNav sprintStart={sprint.start} /></NavBar>
       <div className="flex flex-col pl-4 pr-4 pb-4 w-full max-w-5xl mx-auto">
         <Suspense fallback={<div>Loading...</div>}>
-          <ChoreBoardContainer sprint={sprint} allChores={allChores} />
+          <SprintBoardContainer sprint={sprint} allChores={allChores} />
         </Suspense>
       </div>
     </div>

@@ -31,6 +31,7 @@ export default function ChoreForm({ chore, closeModal }: ChoreFormProps) {
   const [description, setDescription] = useState(chore?.description || "");
   const [recurrence, setRecurrence] = useState(chore?.recurrence || "");
   const [responsibleUserId, setResponsibleUserId] = useState(chore?.responsibleUserId?.toString() || "");
+  const [autoSchedule, setAutoSchedule] = useState(chore?.autoSchedule ?? false);
   const [users, setUsers] = useState<{id: number, firstName: string, lastName: string}[]>([]);
   const [createAnother, setCreateAnother] = useState(false);
 
@@ -62,6 +63,7 @@ export default function ChoreForm({ chore, closeModal }: ChoreFormProps) {
     setDescription("");
     setRecurrence("");
     setResponsibleUserId("");
+    setAutoSchedule(false);
   }
 
   return (
@@ -124,6 +126,18 @@ export default function ChoreForm({ chore, closeModal }: ChoreFormProps) {
             />
           </div>
           <a href="https://icalendar.org/rrule-tool.html" target="_blank" className="text-blue-500 underline">RRule Tool</a>
+          <div className="flex items-center gap-2">
+            <input type="hidden" name="autoSchedule" value={autoSchedule ? "true" : "false"} />
+            <input
+              type="checkbox"
+              id="autoSchedule"
+              checked={autoSchedule}
+              onChange={e => setAutoSchedule(e.target.checked)}
+            />
+            <Label htmlFor="autoSchedule" className="text-sm font-normal cursor-pointer">
+              Auto-schedule when due (otherwise stays in backlog)
+            </Label>
+          </div>
           <Button type="submit">Save Chore</Button>
           { !chore && <label className="flex items-center gap-2">
             <input
