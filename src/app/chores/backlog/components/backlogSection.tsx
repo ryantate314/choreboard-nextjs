@@ -12,11 +12,13 @@ export interface BacklogSectionProps {
   onAddChore: () => void;
   onEditChore: (chore: BacklogChore) => void;
   onMoveToCurrentSprint: (chore: BacklogChore) => void;
+  onSetLastCompleted: (chore: BacklogChore) => void;
 }
 
-export default function BacklogSection({ chores, onDragStart, onAddChore, onEditChore, onMoveToCurrentSprint }: BacklogSectionProps) {
+export default function BacklogSection({ chores, onDragStart, onAddChore, onEditChore, onMoveToCurrentSprint, onSetLastCompleted }: BacklogSectionProps) {
   const getMenuItems = (chore: BacklogChore): ChoreCardMenuItem[] => [
     { label: "Move to Current Sprint", onClick: () => onMoveToCurrentSprint(chore) },
+    { label: "Set Last Completed Date", onClick: () => onSetLastCompleted(chore) },
     { label: "Edit Chore", onClick: () => onEditChore(chore), separator: true },
   ];
   const availableChores = chores.filter(c => !c.hasIncompleteInstance);

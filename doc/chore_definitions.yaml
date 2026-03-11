@@ -128,3 +128,23 @@
   recurrence: FREQ=MONTHLY;INTERVAL=6
   category: Home Maintenance
   autoSchedule: false
+
+- name: Take out Trash
+  recurrence: FREQ=WEEKLY;INTERVAL=1;BYDAY=TH
+  category: Cleaning
+  autoSchedule: true
+
+- name: Dust
+  recurrence: FREQ=WEEKLY;INTERVAL=2
+  category: Cleaning
+  autoSchedule: true
+
+- name: Vacuum
+  recurrence: FREQ=WEEKLY;INTERVAL=2
+  category: Cleaning
+  autoSchedule: true
+
+- name: Mop
+  recurrence: FREQ=MONTHLY;INTERVAL=1
+  category: Cleaning
+  autoSchedule: true

@@ -7,6 +7,7 @@ import { scheduleChoreToSprint } from "../../../actions/chores";
 import SprintSection from "./sprintSection";
 import BacklogSection from "./backlogSection";
 import ChoreForm from "../../components/choreForm";
+import SetLastCompletedModal from "./setLastCompletedModal";
 
 export interface BacklogPlanningContainerProps {
   backlogChores: BacklogChore[];
@@ -22,6 +23,7 @@ export default function BacklogPlanningContainer({
   const dragChore = useRef<BacklogChore | null>(null);
   const [addedWeeks, setAddedWeeks] = useState<Date[]>([]);
   const [editingChore, setEditingChore] = useState<BacklogChore | null>(null);
+  const [setLastCompletedChore, setSetLastCompletedChore] = useState<BacklogChore | null>(null);
 
   const handleDragStart = (chore: BacklogChore) => {
     dragChore.current = chore;
@@ -102,12 +104,20 @@ export default function BacklogPlanningContainer({
         onAddChore={() => setEditingChore({} as BacklogChore)}
         onEditChore={setEditingChore}
         onMoveToCurrentSprint={handleMoveToCurrentSprint}
+        onSetLastCompleted={setSetLastCompletedChore}
       />
       
       {editingChore !== null && (
         <ChoreForm
           chore={editingChore.id ? editingChore : undefined}
           closeModal={() => setEditingChore(null)}
+        />
+      )}
+      
+      {setLastCompletedChore !== null && (
+        <SetLastCompletedModal
+          chore={setLastCompletedChore}
+          closeModal={() => setSetLastCompletedChore(null)}
         />
       )}
     </div>

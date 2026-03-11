@@ -88,14 +88,23 @@ async function main() {
     console.log(`Fixed ${choresNeedingFix.length} chores with missing nextDueDate`);
   }
 
-  // Create chores
+  // Create or update chores
   for (const def of choreDefinitions) {
     const existing = await prisma.chore.findFirst({
       where: { name: def.name },
     });
 
     if (existing) {
-      console.log(`Chore "${def.name}" already exists, skipping.`);
+      // Update existing chore with YAML values (preserves nextDueDate)
+      await prisma.chore.update({
+        where: { id: existing.id },
+        data: {
+          description: def.description || null,
+          recurrence: def.recurrence || null,
+          autoSchedule: def.autoSchedule ?? false,
+        },
+      });
+      console.log(`Updated chore: ${existing.name} (autoSchedule: ${def.autoSchedule ?? false})`);
       continue;
     }
 
