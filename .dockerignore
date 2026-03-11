@@ -2,4 +2,11 @@ node_modules
 .next
 .github
 .env
+.env.*
 uploads
+*.md
+doc/
+.git
+.gitignore
+.vscode
+*.log

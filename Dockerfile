@@ -21,7 +21,16 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
+# Alpine compatibility for native modules
+RUN apk add --no-cache libc6-compat
+
 ENV NODE_ENV=production
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3000
+
+# Image metadata
+LABEL org.opencontainers.image.source="https://github.com/ryantate314/choreboard-nextjs"
+LABEL org.opencontainers.image.description="TaterBase home management dashboard"
 
 # Copy built app from builder
 COPY --from=builder /app/.next/standalone ./
@@ -34,17 +43,25 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
 
 # Install prisma CLI for migrations (pin to same version as project)
-RUN npm install prisma@6.9.0 --save-prod --ignore-scripts
+ARG PRISMA_VERSION=6.9.0
+RUN npm install prisma@${PRISMA_VERSION} --save-prod --ignore-scripts
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-RUN mkdir -p /data/uploads && chown nextjs:nodejs /data/uploads
-RUN chown -R nextjs:nodejs /app/node_modules
+# Create non-root user and set up directories
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs && \
+    mkdir -p /data/uploads && \
+    chown nextjs:nodejs /data/uploads && \
+    chown -R nextjs:nodejs /app/node_modules
+
+# Copy entrypoint script
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh && chown nextjs:nodejs docker-entrypoint.sh
+
 USER nextjs
 
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/ || exit 1
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]
+ENTRYPOINT ["./docker-entrypoint.sh"]
