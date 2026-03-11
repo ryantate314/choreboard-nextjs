@@ -11,11 +11,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+function formatDate(date: Date): string {
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
 export default function SprintNav({ sprintStart }: { sprintStart: Date }) {
   return (
     <div className="flex items-center">
       <div className="px-4 py-2">
-        {sprintStart.toLocaleDateString()} - {addDays(sprintStart, 6).toLocaleDateString()}
+        {formatDate(sprintStart)} - {formatDate(addDays(sprintStart, 6))}
       </div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -28,7 +32,7 @@ export default function SprintNav({ sprintStart }: { sprintStart: Date }) {
             <Link
               href={{
                 pathname: "/chores",
-                query: { weekStart: addDays(sprintStart, -7).toLocaleDateString() },
+                query: { weekStart: addDays(sprintStart, -7).toISOString().split("T")[0] },
               }}
               className="flex items-center gap-2"
             >
@@ -40,7 +44,7 @@ export default function SprintNav({ sprintStart }: { sprintStart: Date }) {
             <Link
               href={{
                 pathname: "/chores",
-                query: { weekStart: addDays(sprintStart, 7).toLocaleDateString() },
+                query: { weekStart: addDays(sprintStart, 7).toISOString().split("T")[0] },
               }}
               className="flex items-center gap-2"
             >

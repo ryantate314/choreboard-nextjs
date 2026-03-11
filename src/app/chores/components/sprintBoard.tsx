@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Sprint, SprintItem } from "../../models/chore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DaySection from "./daySection";
@@ -22,11 +22,15 @@ const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 function SprintBoard({ sprint, handleDrop, handleDragStart, openModal }: SprintBoardProps) {
   const { items, start: weekStart } = sprint;
 
-  const now = useMemo(() => new Date(), []);
-  const todayIndex = useMemo(() => {
-    const day = now.getDay();
-    return day === 0 ? 6 : day - 1;
-  }, [now]);
+  const [todayIndex, setTodayIndex] = useState(0);
+  const [now, setNow] = useState<Date | null>(null);
+  
+  useEffect(() => {
+    const currentDate = new Date();
+    setNow(currentDate);
+    const day = currentDate.getDay();
+    setTodayIndex(day === 0 ? 6 : day - 1);
+  }, []);
 
   const todoItems = items.filter(i => !i.completedAt && !i.startedAt);
   const inProgressItems = items.filter(i => !i.completedAt && i.startedAt);
@@ -70,7 +74,7 @@ function SprintBoard({ sprint, handleDrop, handleDragStart, openModal }: SprintB
   }
 
   function renderItem(item: SprintItem, showDay: boolean = false) {
-    const isOverdue = item.dueDate && item.dueDate < now && !item.completedAt;
+    const isOverdue = now && item.dueDate && item.dueDate < now && !item.completedAt;
     const dayName = item.dueDate ? DAY_NAMES[item.dueDate.getDay() === 0 ? 6 : item.dueDate.getDay() - 1] : null;
     
     return (

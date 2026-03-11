@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { SprintItem } from "../../../models/chore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ChoreCard from "./choreCard";
@@ -23,12 +24,6 @@ function formatWeekRange(start: Date, end: Date): string {
   return `${startStr} - ${endStr}`;
 }
 
-function isCurrentWeek(weekStart: Date): boolean {
-  const now = new Date();
-  const monday = getMonday(now);
-  return weekStart.getTime() === monday.getTime();
-}
-
 function getMonday(date: Date) {
   const d = new Date(date);
   const day = d.getDay();
@@ -38,8 +33,20 @@ function getMonday(date: Date) {
   return d;
 }
 
+function useIsCurrentWeek(weekStart: Date): boolean {
+  const [isCurrent, setIsCurrent] = useState(false);
+  
+  useEffect(() => {
+    const now = new Date();
+    const monday = getMonday(now);
+    setIsCurrent(weekStart.getTime() === monday.getTime());
+  }, [weekStart]);
+  
+  return isCurrent;
+}
+
 export default function SprintSection({ weekStart, weekEnd, items, onDrop, onRemoveItem }: SprintSectionProps) {
-  const isCurrent = isCurrentWeek(weekStart);
+  const isCurrent = useIsCurrentWeek(weekStart);
   
   return (
     <Card
