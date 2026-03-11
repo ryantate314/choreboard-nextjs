@@ -4,6 +4,7 @@ import SprintBoardContainer from "./components/sprintBoardContainer";
 import NavBar from "../components/navBar";
 import SprintNav from "./components/sprintNav";
 
+export const dynamic = "force-dynamic";
 
 type Params = Promise<{ weekStart?: string }>;
 

@@ -3,6 +3,8 @@ import { getBacklogData, getSprintWeeks, getSprint } from "../../actions/chores"
 import BacklogPlanningContainer from "./components/backlogPlanningContainer";
 import NavBar from "../../components/navBar";
 
+export const dynamic = "force-dynamic";
+
 export default async function BacklogPage() {
   const backlogChores = await getBacklogData();
   const sprintWeeks = await getSprintWeeks();
