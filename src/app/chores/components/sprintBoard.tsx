@@ -22,6 +22,7 @@ const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 function SprintBoard({ sprint, handleDrop, handleDragStart, openModal }: SprintBoardProps) {
   const { items, start: weekStart } = sprint;
 
+  const [isHydrated, setIsHydrated] = useState(false);
   const [todayIndex, setTodayIndex] = useState(0);
   const [now, setNow] = useState<Date | null>(null);
   
@@ -30,6 +31,7 @@ function SprintBoard({ sprint, handleDrop, handleDragStart, openModal }: SprintB
     setNow(currentDate);
     const day = currentDate.getDay();
     setTodayIndex(day === 0 ? 6 : day - 1);
+    setIsHydrated(true);
   }, []);
 
   const todoItems = items.filter(i => !i.completedAt && !i.startedAt);
@@ -97,6 +99,37 @@ function SprintBoard({ sprint, handleDrop, handleDragStart, openModal }: SprintB
           <div className="text-xs text-surface-500">{item.chore.responsibleUser.firstName}</div>
         )}
         {item.isVirtual && <div className="text-xs text-surface-500 italic">Not yet scheduled</div>}
+      </div>
+    );
+  }
+
+  if (!isHydrated) {
+    return (
+      <div className="flex flex-row gap-4 min-w-full overflow-x-auto">
+        <Card className="grow basis-1 min-h-[500px] min-w-[200px] py-2 gap-0">
+          <CardHeader className="px-3 py-2">
+            <CardTitle>TODO</CardTitle>
+          </CardHeader>
+          <CardContent className="px-3 py-0 flex items-center justify-center">
+            <span className="text-surface-500">Loading...</span>
+          </CardContent>
+        </Card>
+        <Card className="grow basis-1 min-h-[500px] min-w-[150px] py-2 gap-2">
+          <CardHeader className="px-3 py-2">
+            <CardTitle>In Progress</CardTitle>
+          </CardHeader>
+          <CardContent className="px-3 py-0 flex items-center justify-center">
+            <span className="text-surface-500">Loading...</span>
+          </CardContent>
+        </Card>
+        <Card className="grow basis-1 min-h-[500px] min-w-[150px] py-2 gap-2">
+          <CardHeader className="px-3 py-2">
+            <CardTitle>Done</CardTitle>
+          </CardHeader>
+          <CardContent className="px-3 py-0 flex items-center justify-center">
+            <span className="text-surface-500">Loading...</span>
+          </CardContent>
+        </Card>
       </div>
     );
   }
