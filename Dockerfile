@@ -43,4 +43,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s \
     CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
 
-CMD npx prisma migrate deploy && node server.js
+CMD node ./node_modules/prisma/build/index.js migrate deploy && node server.js
