@@ -1,0 +1,17 @@
+services:
+  app:
+    image: ghcr.io/ryantate314/choreboard-nextjs:latest
+    container_name: taterbase
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - UPLOAD_DIR=/data/uploads
+    volumes:
+      - uploads:/data/uploads
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+volumes:
+  uploads:

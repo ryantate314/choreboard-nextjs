@@ -13,7 +13,8 @@ RUN npx prisma generate
 # Copy the rest of the app
 COPY . .
 
-# Build the Next.js app
+# Build the Next.js app (dummy DATABASE_URL for Prisma schema validation)
+ARG DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
 RUN npm run build
 
 # Production image
