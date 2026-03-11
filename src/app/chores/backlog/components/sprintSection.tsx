@@ -45,8 +45,19 @@ function useIsCurrentWeek(weekStart: Date): boolean {
   return isCurrent;
 }
 
+function useWeekRangeLabel(weekStart: Date, weekEnd: Date): string | null {
+  const [label, setLabel] = useState<string | null>(null);
+  
+  useEffect(() => {
+    setLabel(formatWeekRange(weekStart, weekEnd));
+  }, [weekStart, weekEnd]);
+  
+  return label;
+}
+
 export default function SprintSection({ weekStart, weekEnd, items, onDrop, onRemoveItem }: SprintSectionProps) {
   const isCurrent = useIsCurrentWeek(weekStart);
+  const weekRangeLabel = useWeekRangeLabel(weekStart, weekEnd);
   
   return (
     <Card
@@ -56,7 +67,7 @@ export default function SprintSection({ weekStart, weekEnd, items, onDrop, onRem
     >
       <CardHeader className="px-4 py-3">
         <CardTitle className="flex items-center gap-2">
-          <span>{formatWeekRange(weekStart, weekEnd)}</span>
+          <span>{weekRangeLabel ?? "..."}</span>
           {isCurrent && (
             <span className="text-xs bg-primary-500 text-white px-2 py-0.5 rounded">
               Current

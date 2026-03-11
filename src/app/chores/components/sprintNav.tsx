@@ -10,16 +10,23 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useState, useEffect } from "react";
 
 function formatDate(date: Date): string {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 export default function SprintNav({ sprintStart }: { sprintStart: Date }) {
+  const [dateRange, setDateRange] = useState<string | null>(null);
+
+  useEffect(() => {
+    setDateRange(`${formatDate(sprintStart)} - ${formatDate(addDays(sprintStart, 6))}`);
+  }, [sprintStart]);
+
   return (
     <div className="flex items-center">
       <div className="px-4 py-2">
-        {formatDate(sprintStart)} - {formatDate(addDays(sprintStart, 6))}
+        {dateRange ?? "Loading..."}
       </div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

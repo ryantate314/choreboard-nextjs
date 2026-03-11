@@ -1,5 +1,5 @@
 # Use the official Node.js image as the base
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Install dependencies
@@ -18,7 +18,7 @@ ARG DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholde
 RUN npm run build
 
 # Production image
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 # Alpine compatibility for native modules

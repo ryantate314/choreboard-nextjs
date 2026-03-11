@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { User } from "@prisma/client";
 import { Badge } from "@/components/ui/badge";
 import { MoreHorizontal, X } from "lucide-react";
@@ -46,6 +47,18 @@ function formatDayOfWeek(date: Date): string {
   return date.toLocaleDateString("en-US", { weekday: "short" });
 }
 
+function useDayOfWeekLabel(date: Date | null | undefined): string | null {
+  const [label, setLabel] = useState<string | null>(null);
+  
+  useEffect(() => {
+    if (date) {
+      setLabel(formatDayOfWeek(date));
+    }
+  }, [date]);
+  
+  return label;
+}
+
 export default function ChoreCard({
   name,
   description,
@@ -61,6 +74,8 @@ export default function ChoreCard({
   onClick,
   menuItems,
 }: ChoreCardProps) {
+  const dayOfWeekLabel = useDayOfWeekLabel(dueDate);
+  
   return (
     <div
       className={`bg-surface-800 border rounded p-3 ${
@@ -129,8 +144,8 @@ export default function ChoreCard({
         {responsibleUser && (
           <span>{responsibleUser.firstName}</span>
         )}
-        {isScheduled && dueDate && (
-          <span className="ml-auto">{formatDayOfWeek(dueDate)}</span>
+        {isScheduled && dueDate && dayOfWeekLabel && (
+          <span className="ml-auto">{dayOfWeekLabel}</span>
         )}
         {!isScheduled && nextDueDate && (
           <span className={`ml-auto ${isOverdue ? "text-red-400" : ""}`}>
