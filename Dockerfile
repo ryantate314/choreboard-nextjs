@@ -23,19 +23,23 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy built app and node_modules from builder
+# Copy built app from builder
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 # COPY --from=builder /app/public ./public
 
+# Copy Prisma schema and generated client
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
+
+# Install prisma CLI for migrations (pin to same version as project)
+RUN npm install prisma@6.9.0 --save-prod --ignore-scripts
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 RUN mkdir -p /data/uploads && chown nextjs:nodejs /data/uploads
+RUN chown -R nextjs:nodejs /app/node_modules
 USER nextjs
 
 EXPOSE 3000
@@ -43,4 +47,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s \
     CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
 
-CMD node ./node_modules/prisma/build/index.js migrate deploy && node server.js
+CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]
