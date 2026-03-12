@@ -20,18 +20,12 @@ model User {
   ScheduledChore ScheduledChore[]
 }
 
-enum OverdueAction {
-  SKIP_TO_NEXT_INSTANCE
-  KEEP
-}
-
 model Chore {
   id            Int            @id @default(autoincrement())
   name          String
   description   String?
   recurrence    String?
   nextDueDate   DateTime?
-  overdueAction OverdueAction  @default(KEEP)
   autoSchedule  Boolean        @default(false)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
@@ -43,22 +37,29 @@ model Chore {
   ScheduledChore ScheduledChore[]
 }
 
+enum ScheduledStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  SKIPPED
+}
+
 model ScheduledChore {
-  id            Int       @id @default(autoincrement())
+  id            Int             @id @default(autoincrement())
   choreId       Int
-  chore         Chore     @relation(fields: [choreId], references: [id], onDelete: Cascade)
+  chore         Chore           @relation(fields: [choreId], references: [id], onDelete: Cascade)
   dueDate       DateTime?
-  startedAt     DateTime?
+  status        ScheduledStatus @default(TODO)
   completedAt   DateTime?
   completedById Int?
-  completedBy   User?     @relation(fields: [completedById], references: [id])
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  completedBy   User?           @relation(fields: [completedById], references: [id])
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
   @@index([choreId])
   @@index([dueDate])
   @@index([completedAt])
-  @@index([startedAt])
+  @@index([status])
 }
 
 model Location {

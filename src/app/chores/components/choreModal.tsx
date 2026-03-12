@@ -1,12 +1,13 @@
 "use client";
 
-import { Chore, SprintItem } from "../../models/chore";
+import { Chore, ScheduledStatus, SprintItem } from "../../models/chore";
 import {
   createSprintItem,
   startSprintItem,
   unstartSprintItem,
   completeSprintItem,
   uncompleteSprintItem,
+  skipSprintItem,
   deleteSprintItem,
 } from "../../actions/chores";
 import { useState } from "react";
@@ -33,9 +34,9 @@ export default function ChoreModal({ item, closeModal, showEditModal }: ChoreMod
   const [completionDate, setCompletionDate] = useState(new Date());
 
   const chore = item.chore;
-  const isDone = item.completedAt !== null;
-  const isInProgress = !isDone && item.startedAt !== null;
-  const isTodo = !isDone && !isInProgress;
+  const isDone = item.status === ScheduledStatus.DONE;
+  const isInProgress = item.status === ScheduledStatus.IN_PROGRESS;
+  const isTodo = item.status === ScheduledStatus.TODO;
 
   function recurrenceString() {
     return chore.recurrence ? RRule.fromString(chore.recurrence).toText() : null;
@@ -75,6 +76,13 @@ export default function ChoreModal({ item, closeModal, showEditModal }: ChoreMod
     closeModal();
   }
 
+  async function handleSkip() {
+    if (!item.isVirtual && item.id !== null) {
+      await skipSprintItem(item.id);
+    }
+    closeModal();
+  }
+
   async function handleDeleteInstance() {
     if (!item.isVirtual && item.id !== null) {
       await deleteSprintItem(item.id);
@@ -103,8 +111,8 @@ export default function ChoreModal({ item, closeModal, showEditModal }: ChoreMod
           {item.dueDate && (
             <div>Due: {item.dueDate.toLocaleDateString()} ({formatRelativeTime(item.dueDate)})</div>
           )}
-          {item.startedAt && !isDone && (
-            <div>Started: {item.startedAt.toLocaleString()}</div>
+          {isInProgress && (
+            <div className="text-yellow-500">In Progress</div>
           )}
           {item.completedAt && (
             <div>Completed: {item.completedAt.toLocaleString()}</div>
@@ -180,6 +188,12 @@ export default function ChoreModal({ item, closeModal, showEditModal }: ChoreMod
           <Button variant="outline" className="text-lg py-2" onClick={() => showEditModal(chore)}>
             Edit Chore Template
           </Button>
+          
+          {!item.isVirtual && !isDone && (
+            <Button variant="outline" className="text-lg py-2" onClick={handleSkip}>
+              Skip This Instance
+            </Button>
+          )}
           
           {!item.isVirtual && (
             <Button variant="destructive" className="text-lg py-2" onClick={handleDeleteInstance}>

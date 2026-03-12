@@ -1,4 +1,4 @@
-import { Chore, SprintItem } from "./chore";
+import { Chore, ScheduledStatus, SprintItem } from "./chore";
 import {
   Chore as PrismaChore,
   ScheduledChore as PrismaScheduledChore,
@@ -24,7 +24,6 @@ export function mapToChore(chore: ChoreWithUser): Chore {
     description: chore.description,
     recurrence: chore.recurrence,
     nextDueDate: chore.nextDueDate,
-    overdueAction: chore.overdueAction,
     autoSchedule: chore.autoSchedule,
     createdAt: chore.createdAt,
     responsibleUserId: chore.responsibleUserId,
@@ -40,7 +39,7 @@ export function mapToSprintItem(scheduled: ScheduledChoreWithChore): SprintItem 
     id: scheduled.id,
     chore: mapToChore(scheduled.chore),
     dueDate: scheduled.dueDate,
-    startedAt: scheduled.startedAt,
+    status: scheduled.status as ScheduledStatus,
     completedAt: scheduled.completedAt,
     completedById: scheduled.completedById,
     isVirtual: false,
@@ -49,7 +48,7 @@ export function mapToSprintItem(scheduled: ScheduledChoreWithChore): SprintItem 
 
 /**
  * Calculate the next due date for a chore based on its recurrence rule.
- * Uses the most recent completion from scheduled items if available.
+ * Returns the first occurrence AFTER the completion date (next calendar day or later).
  */
 export function getNextDueDate(
   chore: ChoreWithUser,
@@ -60,18 +59,18 @@ export function getNextDueDate(
 
   try {
     const options = RRule.parseString(chore.recurrence);
+    // Use epoch as dtstart so rule generates all possible occurrences
     const rule = new RRule({
       ...options,
-      dtstart: lastCompletedAt,
+      dtstart: new Date(0),
     });
     
-    let nextDate: Date | undefined;
-    rule.all((d, len) => {
-      nextDate = d;
-      return len < 1;
-    });
+    // Search from start of the day AFTER completion to ensure we get a future occurrence
+    const dayAfterCompletion = new Date(lastCompletedAt);
+    dayAfterCompletion.setUTCDate(dayAfterCompletion.getUTCDate() + 1);
+    dayAfterCompletion.setUTCHours(0, 0, 0, 0);
     
-    return nextDate ?? null;
+    return rule.after(dayAfterCompletion, true);
   } catch {
     return null;
   }
@@ -105,19 +104,21 @@ export function buildSprintItems(
     if (!chore.autoSchedule) continue;
     
     const existingForChore = scheduledByChoreId.get(chore.id) ?? [];
-    const hasIncompleteInstance = existingForChore.some(s => !s.completedAt);
+    const hasIncompleteInstance = existingForChore.some(
+      s => s.status === ScheduledStatus.TODO || s.status === ScheduledStatus.IN_PROGRESS
+    );
     
     if (hasIncompleteInstance) continue;
     
-    const lastCompletedAt = findLastCompletedAt(existingForChore);
-    const nextDueDate = getNextDueDate(chore, lastCompletedAt);
+    // Use the stored nextDueDate from the chore, which is updated on completion
+    const nextDueDate = chore.nextDueDate;
     
     if (nextDueDate && nextDueDate < weekEnd) {
       items.push({
         id: null,
         chore: mapToChore(chore),
         dueDate: nextDueDate,
-        startedAt: null,
+        status: ScheduledStatus.TODO,
         completedAt: null,
         completedById: null,
         isVirtual: true,
@@ -126,14 +127,4 @@ export function buildSprintItems(
   }
   
   return items;
-}
-
-function findLastCompletedAt(scheduled: ScheduledChoreWithChore[]): Date | null {
-  let latest: Date | null = null;
-  for (const s of scheduled) {
-    if (s.completedAt && (!latest || s.completedAt > latest)) {
-      latest = s.completedAt;
-    }
-  }
-  return latest;
 }

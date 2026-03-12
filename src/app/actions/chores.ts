@@ -1,10 +1,10 @@
 "use server";
 
 import { prisma } from "../prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, unstable_noStore } from "next/cache";
 import { Chore, Sprint } from "../models/chore";
 import { mapToChore, buildSprintItems, getNextDueDate } from "../models/mappers";
-import { User, OverdueAction } from "@prisma/client";
+import { User, ScheduledStatus } from "@prisma/client";
 import { cache } from "react";
 import { RRule } from "rrule";
 
@@ -14,7 +14,6 @@ export async function saveChore(formData: FormData) {
   const description = formData.get("description") as string | undefined;
   const recurrence = formData.get("recurrence") as string | undefined;
   const responsibleUserId = formData.get("responsibleUserId") as string | undefined;
-  const overdueAction = formData.get("overdueAction") as OverdueAction | undefined;
   const autoSchedule = formData.get("autoSchedule") === "true";
   if (!name) return;
   
@@ -23,7 +22,6 @@ export async function saveChore(formData: FormData) {
     description?: string;
     recurrence?: string;
     responsibleUserId?: number;
-    overdueAction?: OverdueAction;
     autoSchedule?: boolean;
     nextDueDate?: Date | null;
   } = {
@@ -31,7 +29,6 @@ export async function saveChore(formData: FormData) {
     description: description || undefined,
     recurrence: recurrence || undefined,
     responsibleUserId: responsibleUserId ? parseInt(responsibleUserId) : undefined,
-    overdueAction: overdueAction || undefined,
     autoSchedule,
   };
   
@@ -83,6 +80,8 @@ function getMonday(date: Date) {
 }
 
 export async function getSprint(searchParams?: { weekStart?: Date }): Promise<Sprint> {
+  unstable_noStore();
+  
   const weekStart = searchParams?.weekStart ? getMonday(searchParams.weekStart) : getMonday(new Date());
   const weekEnd = new Date(weekStart);
   weekEnd.setDate(weekStart.getDate() + 7);
@@ -92,12 +91,22 @@ export async function getSprint(searchParams?: { weekStart?: Date }): Promise<Sp
     include: { responsibleUser: true },
   });
 
+  // Debug: Log chores with autoSchedule to verify nextDueDate values
+  const autoScheduleChores = chores.filter(c => c.autoSchedule && c.recurrence);
+  console.debug("chores.getSprint: Auto-schedule chores:", autoScheduleChores.map(c => ({
+    id: c.id,
+    name: c.name,
+    nextDueDate: c.nextDueDate,
+    recurrence: c.recurrence,
+  })));
+
   const scheduled = await prisma.scheduledChore.findMany({
     where: {
+      status: { in: [ScheduledStatus.TODO, ScheduledStatus.IN_PROGRESS, ScheduledStatus.DONE] },
       OR: [
         { dueDate: { gte: weekStart, lt: weekEnd } },
         { completedAt: { gte: weekStart, lt: weekEnd } },
-        { dueDate: null, completedAt: null },
+        { dueDate: null, status: { in: [ScheduledStatus.TODO, ScheduledStatus.IN_PROGRESS] } },
       ],
     },
     include: {
@@ -134,10 +143,10 @@ export async function updateSprintItemDueDate(id: number, dueDate: Date | null) 
   revalidatePath("/chores/backlog");
 }
 
-export async function startSprintItem(id: number, startedAt: Date = new Date()) {
+export async function startSprintItem(id: number) {
   await prisma.scheduledChore.update({
     where: { id },
-    data: { startedAt },
+    data: { status: ScheduledStatus.IN_PROGRESS },
   });
   revalidatePath("/chores");
 }
@@ -145,7 +154,7 @@ export async function startSprintItem(id: number, startedAt: Date = new Date()) 
 export async function unstartSprintItem(id: number) {
   await prisma.scheduledChore.update({
     where: { id },
-    data: { startedAt: null },
+    data: { status: ScheduledStatus.TODO },
   });
   revalidatePath("/chores");
 }
@@ -153,11 +162,21 @@ export async function unstartSprintItem(id: number) {
 export async function completeSprintItem(id: number, completedAt: Date = new Date()) {
   const scheduled = await prisma.scheduledChore.update({
     where: { id },
-    data: { completedAt },
+    data: { status: ScheduledStatus.DONE, completedAt },
     include: { chore: { include: { responsibleUser: true } } },
   });
   
+  // Auto-skip older incomplete instances for recurring chores
   if (scheduled.chore.recurrence) {
+    await prisma.scheduledChore.updateMany({
+      where: {
+        choreId: scheduled.choreId,
+        id: { not: id },
+        status: { in: [ScheduledStatus.TODO, ScheduledStatus.IN_PROGRESS] },
+      },
+      data: { status: ScheduledStatus.SKIPPED },
+    });
+    
     const nextDueDate = getNextDueDate(scheduled.chore, completedAt);
     await prisma.chore.update({
       where: { id: scheduled.choreId },
@@ -171,11 +190,21 @@ export async function completeSprintItem(id: number, completedAt: Date = new Dat
 
 export async function quickComplete(choreId: number, completedAt: Date = new Date()) {
   const scheduled = await prisma.scheduledChore.create({
-    data: { choreId, dueDate: completedAt, completedAt },
+    data: { choreId, dueDate: completedAt, status: ScheduledStatus.DONE, completedAt },
     include: { chore: { include: { responsibleUser: true } } },
   });
   
+  // Auto-skip older incomplete instances for recurring chores
   if (scheduled.chore.recurrence) {
+    await prisma.scheduledChore.updateMany({
+      where: {
+        choreId,
+        id: { not: scheduled.id },
+        status: { in: [ScheduledStatus.TODO, ScheduledStatus.IN_PROGRESS] },
+      },
+      data: { status: ScheduledStatus.SKIPPED },
+    });
+    
     const nextDueDate = getNextDueDate(scheduled.chore, completedAt);
     await prisma.chore.update({
       where: { id: choreId },
@@ -190,13 +219,13 @@ export async function quickComplete(choreId: number, completedAt: Date = new Dat
 export async function uncompleteSprintItem(id: number) {
   const scheduled = await prisma.scheduledChore.update({
     where: { id },
-    data: { completedAt: null },
+    data: { status: ScheduledStatus.TODO, completedAt: null },
     include: { chore: { include: { responsibleUser: true } } },
   });
   
   if (scheduled.chore.recurrence) {
     const lastCompleted = await prisma.scheduledChore.findFirst({
-      where: { choreId: scheduled.choreId, completedAt: { not: null } },
+      where: { choreId: scheduled.choreId, status: ScheduledStatus.DONE },
       orderBy: { completedAt: "desc" },
     });
     const nextDueDate = getNextDueDate(scheduled.chore, lastCompleted?.completedAt ?? null);
@@ -206,6 +235,15 @@ export async function uncompleteSprintItem(id: number) {
     });
   }
   
+  revalidatePath("/chores");
+  revalidatePath("/chores/backlog");
+}
+
+export async function skipSprintItem(id: number) {
+  await prisma.scheduledChore.update({
+    where: { id },
+    data: { status: ScheduledStatus.SKIPPED },
+  });
   revalidatePath("/chores");
   revalidatePath("/chores/backlog");
 }
@@ -237,7 +275,7 @@ export async function getBacklogData(): Promise<BacklogChore[]> {
   });
   
   const incompleteScheduled = await prisma.scheduledChore.findMany({
-    where: { completedAt: null },
+    where: { status: { in: [ScheduledStatus.TODO, ScheduledStatus.IN_PROGRESS] } },
     select: { choreId: true },
   });
   const choreIdsWithIncomplete = new Set(incompleteScheduled.map(s => s.choreId));
@@ -284,7 +322,7 @@ export async function getSprintWeeks(): Promise<SprintWeek[]> {
   const scheduled = await prisma.scheduledChore.findMany({
     where: {
       dueDate: { not: null },
-      completedAt: null,
+      status: { in: [ScheduledStatus.TODO, ScheduledStatus.IN_PROGRESS] },
     },
     select: { dueDate: true },
   });
@@ -388,7 +426,6 @@ export interface ChoreExport {
   description: string | null;
   recurrence: string | null;
   nextDueDate: string | null;
-  overdueAction: "KEEP" | "SKIP_TO_NEXT_INSTANCE";
   autoSchedule: boolean;
   responsibleUser: UserExport | null;
 }
@@ -404,7 +441,6 @@ export async function exportChoreDefinitions(): Promise<ChoreExport[]> {
     description: chore.description,
     recurrence: chore.recurrence,
     nextDueDate: chore.nextDueDate?.toISOString() ?? null,
-    overdueAction: chore.overdueAction,
     autoSchedule: chore.autoSchedule,
     responsibleUser: chore.responsibleUser
       ? { firstName: chore.responsibleUser.firstName, lastName: chore.responsibleUser.lastName }
@@ -463,7 +499,6 @@ export async function importChoreDefinitions(data: ChoreExport[]): Promise<Impor
       description: chore.description,
       recurrence: chore.recurrence,
       nextDueDate: chore.nextDueDate ? new Date(chore.nextDueDate) : null,
-      overdueAction: chore.overdueAction as OverdueAction,
       autoSchedule: chore.autoSchedule,
       responsibleUserId,
     };

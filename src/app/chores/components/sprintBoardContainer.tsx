@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Sprint, Chore, SprintItem } from "../../models/chore";
+import { ScheduledStatus, Sprint, Chore, SprintItem } from "../../models/chore";
 import SprintBoard, { DropTarget } from "./sprintBoard";
 import ChoreSearch from "./choreSearch";
 import {
@@ -35,10 +35,10 @@ export default function SprintBoardContainer({ sprint, allChores }: SprintBoardC
       if (target.type === "day") {
         if (item.isVirtual) {
           await createSprintItem(item.chore.id, target.date);
-        } else if (item.completedAt) {
+        } else if (item.status === ScheduledStatus.DONE) {
           await uncompleteSprintItem(item.id!);
           await updateSprintItemDueDate(item.id!, target.date);
-        } else if (item.startedAt) {
+        } else if (item.status === ScheduledStatus.IN_PROGRESS) {
           await unstartSprintItem(item.id!);
           await updateSprintItemDueDate(item.id!, target.date);
         } else {
@@ -48,17 +48,17 @@ export default function SprintBoardContainer({ sprint, allChores }: SprintBoardC
         if (item.isVirtual) {
           const id = await createSprintItem(item.chore.id, item.dueDate);
           await startSprintItem(id);
-        } else if (item.completedAt) {
+        } else if (item.status === ScheduledStatus.DONE) {
           await uncompleteSprintItem(item.id!);
           await startSprintItem(item.id!);
-        } else if (!item.startedAt) {
+        } else if (item.status === ScheduledStatus.TODO) {
           await startSprintItem(item.id!);
         }
       } else if (target.type === "done") {
         if (item.isVirtual) {
           const id = await createSprintItem(item.chore.id, item.dueDate);
           await completeSprintItem(id);
-        } else if (!item.completedAt) {
+        } else if (item.status !== ScheduledStatus.DONE) {
           await completeSprintItem(item.id!);
         }
       }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import { Sprint, SprintItem } from "../../models/chore";
+import { ScheduledStatus, Sprint, SprintItem } from "../../models/chore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DaySection from "./daySection";
 
@@ -34,9 +34,9 @@ function SprintBoard({ sprint, handleDrop, handleDragStart, openModal }: SprintB
     setIsHydrated(true);
   }, []);
 
-  const todoItems = items.filter(i => !i.completedAt && !i.startedAt);
-  const inProgressItems = items.filter(i => !i.completedAt && i.startedAt);
-  const doneItems = items.filter(i => i.completedAt !== null);
+  const todoItems = items.filter(i => i.status === ScheduledStatus.TODO);
+  const inProgressItems = items.filter(i => i.status === ScheduledStatus.IN_PROGRESS);
+  const doneItems = items.filter(i => i.status === ScheduledStatus.DONE);
 
   const { itemsByDay, overdueItems } = useMemo(() => {
     const days: SprintItem[][] = Array.from({ length: 7 }, () => []);
@@ -76,7 +76,7 @@ function SprintBoard({ sprint, handleDrop, handleDragStart, openModal }: SprintB
   }
 
   function renderItem(item: SprintItem, showDay: boolean = false) {
-    const isOverdue = now && item.dueDate && item.dueDate < now && !item.completedAt;
+    const isOverdue = now && item.dueDate && item.dueDate < now && item.status === ScheduledStatus.TODO;
     const dayName = item.dueDate ? DAY_NAMES[item.dueDate.getDay() === 0 ? 6 : item.dueDate.getDay() - 1] : null;
     
     return (

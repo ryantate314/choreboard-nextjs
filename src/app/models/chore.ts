@@ -1,6 +1,15 @@
-import { OverdueAction as PrismaOverdueAction, User } from "@prisma/client";
+export enum ScheduledStatus {
+  TODO = "TODO",
+  IN_PROGRESS = "IN_PROGRESS",
+  DONE = "DONE",
+  SKIPPED = "SKIPPED",
+}
 
-export type OverdueAction = PrismaOverdueAction;
+export interface ChoreUser {
+  id: number;
+  firstName: string;
+  lastName: string;
+}
 
 /**
  * Represents a chore template/definition.
@@ -11,25 +20,25 @@ export interface Chore {
   description: string | null;
   recurrence: string | null;
   nextDueDate: Date | null;
-  overdueAction: OverdueAction;
   autoSchedule: boolean;
   createdAt: Date;
   responsibleUserId: number | null;
-  responsibleUser: User | null;
+  responsibleUser: ChoreUser | null;
 }
 
 /**
  * Represents a sprint item - a scheduled instance of a chore.
- * State derivation:
- * - startedAt = null, completedAt = null → TODO (grouped by day)
- * - startedAt set, completedAt = null → In Progress
- * - completedAt set → Done
+ * Status:
+ * - TODO → Grouped by day in sprint view
+ * - IN_PROGRESS → In Progress column
+ * - DONE → Done column
+ * - SKIPPED → Hidden from view
  */
 export interface SprintItem {
   id: number | null;
   chore: Chore;
   dueDate: Date | null;
-  startedAt: Date | null;
+  status: ScheduledStatus;
   completedAt: Date | null;
   completedById: number | null;
   isVirtual: boolean;

@@ -1,0 +1,37 @@
+---
+description: Business requirements and stakeholder expectations that inform development decisions
+alwaysApply: true
+---
+
+# Stakeholder Requirements
+
+Business rules and user expectations that must be preserved. Reference these when designing features or making implementation decisions.
+
+## Chores Module
+
+**Core Principle**: The app should always surface work that needs doing, regardless of sprint state.
+
+### Sprint Independence
+
+- Chores with due dates must be visible even if no sprint is active
+- Users may forget to start a sprint; the app should degrade gracefully
+- Overdue or due-soon chores should surface automatically, not require manual sprint creation
+
+### Recurrence Reliability
+
+- Recurring chores must calculate next due date correctly after completion
+- Missed occurrences should be clearly indicated
+
+### Recurring Chore Completion
+
+When completing any instance of a recurring chore, all older incomplete instances are automatically skipped. This reflects the reality that household chores don't "stack" - missing 3 weeks of vacuuming doesn't require vacuuming 3 times; you vacuum once and you're current.
+
+Users can also manually **Skip** a task to dismiss it without completing (e.g., "I'm not doing this today").
+
+### Scheduled Item Status
+
+Each scheduled chore instance has one of four statuses:
+- **TODO**: Not yet started
+- **IN_PROGRESS**: Currently being worked on
+- **DONE**: Completed
+- **SKIPPED**: Dismissed without completion (either manually or auto-skipped)

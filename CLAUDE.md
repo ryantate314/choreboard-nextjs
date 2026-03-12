@@ -14,6 +14,8 @@ TaterBase is a multi-module Next.js home management dashboard. Current modules: 
 npm run dev          # Start dev server (port 3001, Turbopack)
 npm run build        # Production build
 npm run lint         # ESLint
+npm test             # Run tests once
+npm run test:watch   # Run tests in watch mode
 npx prisma migrate dev    # Run migrations in development
 npx prisma migrate deploy # Run migrations in production
 npx prisma db seed   # Seed database with default users
@@ -106,6 +108,27 @@ npx shadcn@latest add <component>   # e.g. npx shadcn@latest add button
 ```
 
 Currently installed: badge, button, card, dialog, dropdown-menu, input, label, select, separator.
+
+## Testing
+
+Uses [Vitest](https://vitest.dev/) for integration tests. Tests live alongside source files with `.test.ts` extension.
+
+**Database requirement**: Tests require a running PostgreSQL database. Start one with Docker:
+
+```bash
+docker run -d --name choreboard-test-db \
+  -e POSTGRES_USER=choreboard \
+  -e POSTGRES_PASSWORD='Passw0rd!' \
+  -e POSTGRES_DB=choreboard \
+  -p 5432:5432 \
+  postgres:15-alpine
+
+npx prisma migrate deploy   # Apply migrations to test DB
+npm test                    # Run tests
+docker stop choreboard-test-db && docker rm choreboard-test-db  # Cleanup
+```
+
+Test data is prefixed with `TEST_` and cleaned up in `beforeEach` hooks.
 
 ## Styling
 
