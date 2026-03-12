@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import ChoreCard, { ChoreCardMenuItem } from "./choreCard";
+import ImportExportButtons from "./importExportButtons";
 
 export interface BacklogSectionProps {
   chores: BacklogChore[];
@@ -40,6 +41,7 @@ export default function BacklogSection({ chores, onDragStart, onAddChore, onEdit
           >
             <Plus className="h-4 w-4" />
           </Button>
+          <ImportExportButtons />
           <span className="text-sm font-normal text-surface-400 ml-auto">
             {availableChores.length} {availableChores.length === 1 ? "chore" : "chores"}
           </span>

@@ -377,3 +377,111 @@ export async function scheduleChoreToSprint(choreId: number, weekStart: Date): P
 export const getUsers = cache(async (): Promise<User[]> => {
   return await prisma.user.findMany();
 });
+
+export interface UserExport {
+  firstName: string;
+  lastName: string;
+}
+
+export interface ChoreExport {
+  name: string;
+  description: string | null;
+  recurrence: string | null;
+  nextDueDate: string | null;
+  overdueAction: "KEEP" | "SKIP_TO_NEXT_INSTANCE";
+  autoSchedule: boolean;
+  responsibleUser: UserExport | null;
+}
+
+export async function exportChoreDefinitions(): Promise<ChoreExport[]> {
+  const chores = await prisma.chore.findMany({
+    where: { deletedAt: null },
+    include: { responsibleUser: true },
+  });
+
+  return chores.map((chore) => ({
+    name: chore.name,
+    description: chore.description,
+    recurrence: chore.recurrence,
+    nextDueDate: chore.nextDueDate?.toISOString() ?? null,
+    overdueAction: chore.overdueAction,
+    autoSchedule: chore.autoSchedule,
+    responsibleUser: chore.responsibleUser
+      ? { firstName: chore.responsibleUser.firstName, lastName: chore.responsibleUser.lastName }
+      : null,
+  }));
+}
+
+export interface ImportResult {
+  choresCreated: number;
+  choresUpdated: number;
+  usersCreated: number;
+}
+
+export async function importChoreDefinitions(data: ChoreExport[]): Promise<ImportResult> {
+  const result: ImportResult = {
+    choresCreated: 0,
+    choresUpdated: 0,
+    usersCreated: 0,
+  };
+
+  const userCache = new Map<string, number>();
+
+  const existingUsers = await prisma.user.findMany();
+  for (const user of existingUsers) {
+    const key = `${user.firstName}|${user.lastName}`;
+    userCache.set(key, user.id);
+  }
+
+  for (const chore of data) {
+    let responsibleUserId: number | null = null;
+
+    if (chore.responsibleUser) {
+      const userKey = `${chore.responsibleUser.firstName}|${chore.responsibleUser.lastName}`;
+      
+      if (userCache.has(userKey)) {
+        responsibleUserId = userCache.get(userKey)!;
+      } else {
+        const newUser = await prisma.user.create({
+          data: {
+            firstName: chore.responsibleUser.firstName,
+            lastName: chore.responsibleUser.lastName,
+          },
+        });
+        userCache.set(userKey, newUser.id);
+        responsibleUserId = newUser.id;
+        result.usersCreated++;
+      }
+    }
+
+    const existingChore = await prisma.chore.findFirst({
+      where: { name: chore.name, deletedAt: null },
+    });
+
+    const choreData = {
+      name: chore.name,
+      description: chore.description,
+      recurrence: chore.recurrence,
+      nextDueDate: chore.nextDueDate ? new Date(chore.nextDueDate) : null,
+      overdueAction: chore.overdueAction as OverdueAction,
+      autoSchedule: chore.autoSchedule,
+      responsibleUserId,
+    };
+
+    if (existingChore) {
+      await prisma.chore.update({
+        where: { id: existingChore.id },
+        data: choreData,
+      });
+      result.choresUpdated++;
+    } else {
+      await prisma.chore.create({ data: choreData });
+      result.choresCreated++;
+    }
+  }
+
+  revalidatePath("/chores");
+  revalidatePath("/chores/backlog");
+
+  return result;
+}
