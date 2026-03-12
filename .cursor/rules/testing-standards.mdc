@@ -1,0 +1,70 @@
+---
+description: Testing standards for test files
+globs: "**/*.test.{ts,tsx}"
+---
+
+# Testing Standards
+
+## Test Structure
+
+```typescript
+describe("ComponentName", () => {
+  describe("featureName", () => {
+    it("should do expected behavior when condition", () => {
+      // Arrange
+      // Act
+      // Assert
+    });
+  });
+});
+```
+
+## Naming Conventions
+
+- Test files: `*.test.ts` or `*.test.tsx`
+- Describe blocks: Component or function name
+- It blocks: `should [expected behavior] when [condition]`
+
+## What to Test
+
+**Priority order**:
+1. Critical business logic and calculations
+2. Error handling paths
+3. Edge cases (empty arrays, null values, boundaries)
+4. User interactions in components
+
+**Skip**:
+- Implementation details (internal state shape)
+- Third-party library behavior
+- Trivial getters/setters
+
+## Mocking
+
+```typescript
+// Mock external dependencies, not internal modules
+jest.mock("external-api");
+
+// Prefer dependency injection over mocking when possible
+function processData(fetcher = defaultFetcher) {
+  // testable without mocks
+}
+```
+
+## Assertions
+
+- One logical assertion per test (multiple `expect` calls OK if testing one concept)
+- Use specific matchers: `toEqual`, `toContain`, `toThrow`
+- Test behavior, not implementation
+
+## Server Actions
+
+Test server actions by:
+1. Mocking Prisma client
+2. Calling action directly
+3. Asserting on return value and side effects
+
+## React Components
+
+- Use React Testing Library
+- Query by role, label, or text (not test IDs unless necessary)
+- Test user interactions, not internal state

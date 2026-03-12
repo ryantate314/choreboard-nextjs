@@ -1,0 +1,68 @@
+---
+description: TypeScript and React coding standards for this Next.js project
+globs: "**/*.{ts,tsx}"
+---
+
+# Coding Standards
+
+## Next.js App Router Conventions
+
+**Server Components** (default):
+- `page.tsx` files fetch data and pass to client components
+- Use `async` functions for data fetching
+- Import Prisma client directly
+
+**Client Components**:
+- Add `"use client"` directive at top
+- Live in `components/` subdirectories
+- Handle interactivity, state, effects
+
+**Server Actions** (`src/app/actions/`):
+- Add `"use server"` directive
+- Call `revalidatePath()` after mutations
+- Return typed results, handle errors explicitly
+
+## Component Patterns
+
+```typescript
+// Functional components only
+export function MyComponent({ data }: Props) {
+  // Extract reusable logic to custom hooks
+  const { state, handlers } = useMyHook(data);
+  
+  return <div>...</div>;
+}
+```
+
+## Error Handling
+
+```typescript
+// ✅ Handle errors explicitly
+try {
+  await saveData(input);
+} catch (error) {
+  console.error("Failed to save:", error);
+  throw new Error("Save failed", { cause: error });
+}
+
+// ❌ Never swallow errors
+try {
+  await saveData(input);
+} catch {}
+```
+
+## Imports
+
+Order: React/Next → external packages → internal modules → relative imports → types
+
+## shadcn/ui
+
+Use CLI to add components: `npx shadcn@latest add <component>`
+
+Never edit `src/components/ui/` files directly.
+
+## Prisma
+
+- Keep queries in server components or server actions
+- Use transactions for multi-step operations
+- Include only needed fields with `select`
