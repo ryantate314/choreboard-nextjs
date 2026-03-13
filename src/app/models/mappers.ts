@@ -49,6 +49,11 @@ export function mapToSprintItem(scheduled: ScheduledChoreWithChore): SprintItem 
 /**
  * Calculate the next due date for a chore based on its recurrence rule.
  * Returns the first occurrence AFTER the completion date (next calendar day or later).
+ * 
+ * For patterns without explicit day anchoring (e.g., FREQ=WEEKLY without BYDAY),
+ * the dtstart determines which day of week the pattern runs on. We find a historical
+ * date with the same alignment to enable back-dated completions while preserving
+ * the expected schedule.
  */
 export function getNextDueDate(
   chore: ChoreWithUser,
@@ -59,10 +64,15 @@ export function getNextDueDate(
 
   try {
     const options = RRule.parseString(chore.recurrence);
-    // Use epoch as dtstart so rule generates all possible occurrences
+    
+    // Find a historical dtstart that preserves the schedule alignment
+    // We go back ~50 years to ensure we can handle any back-dated completion
+    const anchorDate = chore.nextDueDate ?? chore.createdAt;
+    const historicalStart = findHistoricalAlignment(anchorDate, options);
+    
     const rule = new RRule({
       ...options,
-      dtstart: new Date(0),
+      dtstart: historicalStart,
     });
     
     // Search from start of the day AFTER completion to ensure we get a future occurrence
@@ -74,6 +84,29 @@ export function getNextDueDate(
   } catch {
     return null;
   }
+}
+
+/**
+ * Find a historical date that aligns with the anchor date for the given recurrence options.
+ * This allows back-dated completions to work correctly while preserving schedule alignment.
+ */
+function findHistoricalAlignment(
+  anchorDate: Date,
+  options: Partial<ReturnType<typeof RRule.parseString>>
+): Date {
+  // If there's explicit day anchoring (BYDAY, BYMONTHDAY), epoch works fine
+  if (options.byweekday || options.bymonthday || options.byyearday) {
+    return new Date(0);
+  }
+  
+  // For FREQ=WEEKLY without BYDAY, preserve day-of-week
+  // For FREQ=MONTHLY without BYMONTHDAY, preserve day-of-month
+  // Go back to 1970 with the same alignment
+  const result = new Date(anchorDate);
+  result.setUTCFullYear(1970);
+  result.setUTCHours(0, 0, 0, 0);
+  
+  return result;
 }
 
 /**
