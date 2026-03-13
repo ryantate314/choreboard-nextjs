@@ -56,8 +56,15 @@ Adopt the appropriate persona based on task context. Multiple personas may apply
 - Verify changes match the requirements/acceptance criteria
 - Look for: hardcoded values, missing validation, unhandled edge cases
 - Suggest improvements if significant issues found
+- **Run CI checks before committing**:
+  ```bash
+  npm run lint
+  npx tsc --noEmit
+  npm run build
+  npm test
+  ```
 
-**Output**: Confirmation that code meets quality bar, or list of issues to address.
+**Output**: Confirmation that code meets quality bar and all CI checks pass, or list of issues to address.
 
 ## QA Tester
 
