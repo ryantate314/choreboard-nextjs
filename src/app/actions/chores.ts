@@ -17,6 +17,16 @@ export async function saveChore(formData: FormData) {
   const autoSchedule = formData.get("autoSchedule") === "true";
   if (!name) return;
   
+  // Calculate nextDueDate upfront if recurrence is set (required by DB constraint)
+  let nextDueDate: Date | null = null;
+  if (recurrence) {
+    const tempChore = {
+      recurrence,
+      createdAt: new Date(),
+    } as Parameters<typeof getNextDueDate>[0];
+    nextDueDate = getNextDueDate(tempChore, null);
+  }
+  
   const data: {
     name: string;
     description?: string;
@@ -30,10 +40,16 @@ export async function saveChore(formData: FormData) {
     recurrence: recurrence || undefined,
     responsibleUserId: responsibleUserId ? parseInt(responsibleUserId) : undefined,
     autoSchedule,
+    nextDueDate,
   };
   
   let result;
   if (id) {
+    // For updates, recalculate nextDueDate if recurrence changed
+    const existing = await prisma.chore.findUnique({ where: { id: parseInt(id) } });
+    if (existing && recurrence !== existing.recurrence) {
+      data.nextDueDate = nextDueDate;
+    }
     result = await prisma.chore.update({
       where: { id: parseInt(id) },
       data,
@@ -44,17 +60,6 @@ export async function saveChore(formData: FormData) {
       data,
       include: { responsibleUser: true },
     });
-  }
-  
-  if (result.recurrence && !result.nextDueDate) {
-    const nextDueDate = getNextDueDate(result, null);
-    if (nextDueDate) {
-      result = await prisma.chore.update({
-        where: { id: result.id },
-        data: { nextDueDate },
-        include: { responsibleUser: true },
-      });
-    }
   }
   
   revalidatePath("/chores");

@@ -324,6 +324,7 @@ describe('Auto-skip incomplete instances on completion', () => {
       data: {
         name: 'TEST_CHORE_manual_skip',
         recurrence: 'FREQ=WEEKLY',
+        nextDueDate: new Date('2026-03-16'),
       },
     });
 
@@ -339,5 +340,65 @@ describe('Auto-skip incomplete instances on completion', () => {
 
     const updated = await prisma.scheduledChore.findUnique({ where: { id: instance.id } });
     expect(updated!.status).toBe(ScheduledStatus.SKIPPED);
+  });
+});
+
+describe('Chore creation with recurrence', () => {
+  beforeAll(async () => {
+    await prisma.$connect();
+  });
+
+  afterAll(async () => {
+    await prisma.$disconnect();
+  });
+
+  beforeEach(async () => {
+    await prisma.scheduledChore.deleteMany({
+      where: { chore: { name: { startsWith: 'TEST_CHORE_' } } },
+    });
+    await prisma.chore.deleteMany({
+      where: { name: { startsWith: 'TEST_CHORE_' } },
+    });
+  });
+
+  it('should set nextDueDate when creating a chore with recurrence', async () => {
+    // This tests the DB constraint: recurrence requires nextDueDate
+    const chore = await prisma.chore.create({
+      data: {
+        name: 'TEST_CHORE_with_recurrence',
+        recurrence: 'FREQ=WEEKLY;INTERVAL=2',
+        nextDueDate: new Date('2026-03-27'),
+      },
+    });
+
+    expect(chore.recurrence).toBe('FREQ=WEEKLY;INTERVAL=2');
+    expect(chore.nextDueDate).not.toBeNull();
+  });
+
+  it('should reject chore with recurrence but no nextDueDate', async () => {
+    // The DB constraint should reject this
+    await expect(
+      prisma.chore.create({
+        data: {
+          name: 'TEST_CHORE_invalid',
+          recurrence: 'FREQ=WEEKLY',
+          // Missing nextDueDate - should fail
+        },
+      })
+    ).rejects.toThrow();
+  });
+
+  it('should allow chore without recurrence and no nextDueDate', async () => {
+    // One-time chores don't need nextDueDate
+    const chore = await prisma.chore.create({
+      data: {
+        name: 'TEST_CHORE_one_time_no_due',
+        recurrence: null,
+        nextDueDate: null,
+      },
+    });
+
+    expect(chore.recurrence).toBeNull();
+    expect(chore.nextDueDate).toBeNull();
   });
 });
