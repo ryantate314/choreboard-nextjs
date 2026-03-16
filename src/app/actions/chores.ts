@@ -96,15 +96,6 @@ export async function getSprint(searchParams?: { weekStart?: Date }): Promise<Sp
     include: { responsibleUser: true },
   });
 
-  // Debug: Log chores with autoSchedule to verify nextDueDate values
-  const autoScheduleChores = chores.filter(c => c.autoSchedule && c.recurrence);
-  console.debug("chores.getSprint: Auto-schedule chores:", autoScheduleChores.map(c => ({
-    id: c.id,
-    name: c.name,
-    nextDueDate: c.nextDueDate,
-    recurrence: c.recurrence,
-  })));
-
   const scheduled = await prisma.scheduledChore.findMany({
     where: {
       status: { in: [ScheduledStatus.TODO, ScheduledStatus.IN_PROGRESS, ScheduledStatus.DONE] },
