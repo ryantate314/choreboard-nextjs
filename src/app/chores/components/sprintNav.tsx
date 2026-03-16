@@ -8,6 +8,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useState, useEffect } from "react";
@@ -59,6 +61,10 @@ export default function SprintNav({ sprintStart }: { sprintStart: Date }) {
               Next Week
             </Link>
           </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel className="font-mono text-xs">
+            {process.env.NEXT_PUBLIC_COMMIT_HASH}
+          </DropdownMenuLabel>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
