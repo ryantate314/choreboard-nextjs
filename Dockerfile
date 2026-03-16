@@ -2,6 +2,10 @@
 FROM node:22-alpine AS builder
 WORKDIR /app
 
+# Commit hash for version display (pass via --build-arg NEXT_PUBLIC_COMMIT_HASH=abc1234)
+ARG NEXT_PUBLIC_COMMIT_HASH=unknown
+ENV NEXT_PUBLIC_COMMIT_HASH=$NEXT_PUBLIC_COMMIT_HASH
+
 # Install dependencies
 COPY package.json package-lock.json* ./
 RUN npm ci

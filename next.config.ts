@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 import { execSync } from "child_process";
 
 function getCommitHash(): string {
+  const fromEnv = process.env.NEXT_PUBLIC_COMMIT_HASH;
+  if (fromEnv && fromEnv !== "unknown") return fromEnv;
   try {
     return execSync("git rev-parse --short HEAD").toString().trim();
   } catch {
