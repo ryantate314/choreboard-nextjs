@@ -10,7 +10,9 @@ type Params = Promise<{ weekStart?: string }>;
 
 export default async function ChoresPage({ searchParams }: { searchParams: Params }) {
   const params = (await searchParams);
-  const weekStart = params.weekStart ? new Date(params.weekStart) : new Date();
+  // Append explicit UTC offset so a bare "YYYY-MM-DD" string is always parsed
+  // as UTC midnight, regardless of the server's local timezone.
+  const weekStart = params.weekStart ? new Date(`${params.weekStart}T00:00:00Z`) : new Date();
   const sprint = await getSprint({ weekStart: weekStart });
   const allChores = await getAllChores();
 

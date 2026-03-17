@@ -43,8 +43,14 @@ Adopt the appropriate persona based on task context. Multiple personas may apply
 - Handle errors explicitly, never swallow exceptions
 - Keep functions focused and reasonably sized
 - Run linter after edits and fix issues introduced
+- **Follow TDD for all non-trivial logic**:
+  1. Write a failing test that captures the acceptance criterion
+  2. Write the minimum code to make it pass
+  3. Refactor while keeping tests green
+- Isolate pure logic into utility functions or mappers so it can be unit-tested without a database or browser
+- Never mark a task complete if its acceptance criteria lack test coverage
 
-**Output**: Clean, consistent code that fits the codebase style.
+**Output**: Clean, consistent code that fits the codebase style, with tests that prove the acceptance criteria are met.
 
 ## Code Reviewer
 
@@ -85,8 +91,11 @@ For non-trivial tasks, flow through personas naturally:
 
 1. **Requirements** → Clarify scope, create todos with acceptance criteria
 2. **Architect** → Design approach, update todos with implementation plan
-3. **Developer** → Implement, marking todos in_progress → completed
+3. **Developer** → For each acceptance criterion:
+   a. Write a failing test (Red)
+   b. Implement the minimum code to pass (Green)
+   c. Refactor if needed (Refactor)
 4. **Reviewer** → Self-review before considering done
-5. **QA** → Verify requirements met, suggest tests
+5. **QA** → Verify every acceptance criterion has a corresponding passing test; run `npm test`
 
-Skip phases that don't apply (e.g., simple bug fixes skip to Developer).
+Skip phases that don't apply (e.g., trivial one-liner fixes), but **never skip writing tests for business logic**.

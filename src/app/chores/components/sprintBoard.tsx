@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { ScheduledStatus, Sprint, SprintItem } from "../../models/chore";
+import { utcDayIndex } from "../../dateUtils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DaySection from "./daySection";
 
@@ -24,13 +25,15 @@ function SprintBoard({ sprint, handleDrop, handleDragStart, openModal }: SprintB
 
   const [isHydrated, setIsHydrated] = useState(false);
   const [todayIndex, setTodayIndex] = useState(0);
-  const [now, setNow] = useState<Date | null>(null);
+  const [startOfTodayUTC, setStartOfTodayUTC] = useState<Date | null>(null);
   
   useEffect(() => {
     const currentDate = new Date();
-    setNow(currentDate);
     const day = currentDate.getDay();
     setTodayIndex(day === 0 ? 6 : day - 1);
+    const todayUTC = new Date(currentDate);
+    todayUTC.setUTCHours(0, 0, 0, 0);
+    setStartOfTodayUTC(todayUTC);
     setIsHydrated(true);
   }, []);
 
@@ -44,8 +47,7 @@ function SprintBoard({ sprint, handleDrop, handleDragStart, openModal }: SprintB
     
     for (const item of todoItems) {
       if (item.dueDate) {
-        const dayOfWeek = item.dueDate.getDay();
-        const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        const dayIndex = utcDayIndex(item.dueDate);
         
         if (dayIndex < todayIndex) {
           overdue.push(item);
@@ -66,9 +68,12 @@ function SprintBoard({ sprint, handleDrop, handleDragStart, openModal }: SprintB
   }, [todoItems, todayIndex]);
 
   function getDateForDay(dayIndex: number): Date {
-    const date = new Date(weekStart);
-    date.setDate(weekStart.getDate() + dayIndex);
-    return date;
+    // Use UTC date components: weekStart is serialized as UTC midnight from server.
+    // getDate() returns local day, causing off-by-one when server is UTC and client is not.
+    const year = weekStart.getUTCFullYear();
+    const month = weekStart.getUTCMonth();
+    const day = weekStart.getUTCDate();
+    return new Date(year, month, day + dayIndex);
   }
 
   function getItemKey(item: SprintItem): string {
@@ -76,8 +81,9 @@ function SprintBoard({ sprint, handleDrop, handleDragStart, openModal }: SprintB
   }
 
   function renderItem(item: SprintItem, showDay: boolean = false) {
-    const isOverdue = now && item.dueDate && item.dueDate < now && item.status === ScheduledStatus.TODO;
-    const dayName = item.dueDate ? DAY_NAMES[item.dueDate.getDay() === 0 ? 6 : item.dueDate.getDay() - 1] : null;
+    // Compare against UTC-day boundary so a chore due Monday isn't flagged overdue on Sunday evening
+    const isOverdue = startOfTodayUTC && item.dueDate && item.dueDate < startOfTodayUTC && item.status === ScheduledStatus.TODO;
+    const dayName = item.dueDate ? DAY_NAMES[utcDayIndex(item.dueDate)] : null;
     
     return (
       <div

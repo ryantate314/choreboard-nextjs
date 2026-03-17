@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { SprintItem } from "../../../models/chore";
+import { getUTCMonday } from "../../../dateUtils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ChoreCard from "./choreCard";
 
@@ -14,31 +15,25 @@ export interface SprintSectionProps {
 }
 
 function formatWeekRange(start: Date, end: Date): string {
+  // end is exclusive (Sunday midnight UTC); display Saturday = end - 1 day
   const endDisplay = new Date(end);
-  endDisplay.setDate(endDisplay.getDate() - 1);
+  endDisplay.setUTCDate(endDisplay.getUTCDate() - 1);
   
-  const options: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
+  // Render in UTC so stored UTC-midnight dates display as the intended calendar day
+  const options: Intl.DateTimeFormatOptions = { month: "short", day: "numeric", timeZone: "UTC" };
   const startStr = start.toLocaleDateString("en-US", options);
   const endStr = endDisplay.toLocaleDateString("en-US", options);
   
   return `${startStr} - ${endStr}`;
 }
 
-function getMonday(date: Date) {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  d.setDate(diff);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
 function useIsCurrentWeek(weekStart: Date): boolean {
   const [isCurrent, setIsCurrent] = useState(false);
   
   useEffect(() => {
-    const now = new Date();
-    const monday = getMonday(now);
+    // weekStart from the server is UTC midnight; compare against the UTC Monday
+    // of the current week so non-UTC users see the "Current" badge correctly.
+    const monday = getUTCMonday(new Date());
     setIsCurrent(weekStart.getTime() === monday.getTime());
   }, [weekStart]);
   

@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { BacklogChore, SprintWeek, deleteSprintItem } from "../../../actions/chores";
+import { addDays, getUTCMonday } from "../../../dateUtils";
 import { Sprint, SprintItem } from "../../../models/chore";
 import { scheduleChoreToSprint } from "../../../actions/chores";
 import SprintSection from "./sprintSection";
@@ -41,11 +42,9 @@ export default function BacklogPlanningContainer({
     const allWeeks = [...sprintWeeks.map(w => w.weekStart), ...addedWeeks];
     const lastWeek = allWeeks.length > 0 
       ? new Date(Math.max(...allWeeks.map(w => w.getTime())))
-      : getMonday(new Date());
+      : getUTCMonday(new Date());
     
-    const nextWeek = new Date(lastWeek);
-    nextWeek.setDate(lastWeek.getDate() + 7);
-    setAddedWeeks([...addedWeeks, nextWeek]);
+    setAddedWeeks([...addedWeeks, addDays(lastWeek, 7)]);
   };
 
   const handleRemoveFromSprint = async (item: SprintItem) => {
@@ -55,7 +54,7 @@ export default function BacklogPlanningContainer({
   };
 
   const handleMoveToCurrentSprint = async (chore: BacklogChore) => {
-    const currentWeekStart = getMonday(new Date());
+    const currentWeekStart = getUTCMonday(new Date());
     await scheduleChoreToSprint(chore.id, currentWeekStart);
   };
 
@@ -63,7 +62,7 @@ export default function BacklogPlanningContainer({
     ...sprintWeeks,
     ...addedWeeks.map(weekStart => ({
       weekStart,
-      weekEnd: new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000),
+      weekEnd: addDays(weekStart, 7),
       itemCount: 0,
     })),
   ].sort((a, b) => a.weekStart.getTime() - b.weekStart.getTime());
@@ -124,11 +123,3 @@ export default function BacklogPlanningContainer({
   );
 }
 
-function getMonday(date: Date) {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  d.setDate(diff);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}

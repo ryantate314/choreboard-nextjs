@@ -1,16 +1,37 @@
 ---
-description: Testing standards for test files
+description: TDD and testing standards for this Next.js project
 globs: "**/*.test.{ts,tsx}"
+alwaysApply: true
 ---
 
 # Testing Standards
 
+## TDD Cycle (Red → Green → Refactor)
+
+For every non-trivial piece of logic:
+
+1. **Red**: Write a failing test that describes the expected behavior
+2. **Green**: Write the minimum production code to make it pass — no more
+3. **Refactor**: Clean up code and tests while keeping all tests green
+
+If you cannot write a test first (e.g., exploring a new API), write the test immediately after the spike before moving on.
+
+## Test File Placement
+
+Tests live alongside the file they cover:
+
+```
+src/app/dateUtils.ts           → src/app/dateUtils.test.ts
+src/app/models/mappers.ts      → src/app/models/mappers.test.ts
+src/app/actions/chores.ts      → src/app/actions/chores.test.ts
+```
+
 ## Test Structure
 
 ```typescript
-describe("ComponentName", () => {
-  describe("featureName", () => {
-    it("should do expected behavior when condition", () => {
+describe("moduleName or ComponentName", () => {
+  describe("functionOrFeatureName", () => {
+    it("should [expected behavior] when [condition]", () => {
       // Arrange
       // Act
       // Assert
@@ -19,52 +40,100 @@ describe("ComponentName", () => {
 });
 ```
 
-## Naming Conventions
+## Coverage Expectations by Layer
 
-- Test files: `*.test.ts` or `*.test.tsx`
-- Describe blocks: Component or function name
-- It blocks: `should [expected behavior] when [condition]`
+### Pure Utility Functions (`dateUtils.ts`, helpers)
 
-## What to Test
-
-**Priority order**:
-1. Critical business logic and calculations
-2. Error handling paths
-3. Edge cases (empty arrays, null values, boundaries)
-4. User interactions in components
-
-**Skip**:
-- Implementation details (internal state shape)
-- Third-party library behavior
-- Trivial getters/setters
-
-## Mocking
+- **Target**: Every exported function has unit tests
+- **Approach**: Pure input → output, no mocks needed
+- **Must cover**: Happy path, edge cases (empty input, boundaries, negative values), error throws
 
 ```typescript
-// Mock external dependencies, not internal modules
-jest.mock("external-api");
+import { describe, it, expect } from 'vitest';
+import { getUTCMonday } from './dateUtils';
 
-// Prefer dependency injection over mocking when possible
-function processData(fetcher = defaultFetcher) {
-  // testable without mocks
+it('should return the Monday of the same week for a Wednesday', () => {
+  expect(getUTCMonday(new Date('2026-03-18T00:00:00Z')).toISOString())
+    .toBe('2026-03-16T00:00:00.000Z');
+});
+```
+
+### Domain Mappers (`src/app/models/`)
+
+- **Target**: Every mapper function has unit tests
+- **Approach**: Pass raw Prisma-shaped objects, assert on the mapped model
+- **Must cover**: All status transitions, null/undefined optional fields, recurrence edge cases
+
+### Server Actions (`src/app/actions/`)
+
+- **Target**: All happy paths and explicit error branches
+- **Approach**: Integration tests against a real (test) database via Prisma; prefix test data with `TEST_` and clean up in `beforeEach`
+- **Must cover**: Successful mutations, validation failures, not-found cases, revalidation side effects
+
+### Business Logic Extracted for Testability
+
+Complex logic that lives inside server actions or components **must be extracted** into pure functions so it can be unit-tested without a database. Example:
+
+```typescript
+// ✅ Extractable, testable logic
+export function calculateNextDueDate(recurrence: string, lastCompleted: Date): Date { ... }
+
+// ❌ Logic buried in a server action — untestable in isolation
+export async function completeChore(id: number) {
+  const rule = new RRule(...);
+  const next = rule.after(lastCompleted); // can't unit test this path
+  await prisma.chore.update(...);
 }
 ```
 
+### React Components
+
+- Test user-visible behavior, not internal state
+- Use React Testing Library; query by role, label, or visible text
+- Cover: initial render state, user interactions (click, submit), conditional rendering branches
+
+## Mocking (Vitest)
+
+This project uses **Vitest**, not Jest. Use `vi`, not `jest`:
+
+```typescript
+import { vi, describe, it, expect } from 'vitest';
+
+// Mock a module
+vi.mock('../lib/prisma', () => ({ default: { chore: { update: vi.fn() } } }));
+
+// Spy on a function
+const spy = vi.spyOn(module, 'functionName');
+```
+
+Prefer **dependency injection** over mocking when possible — it keeps code more testable without coupling tests to implementation details:
+
+```typescript
+// Prefer this
+export function processChores(fetcher = defaultFetcher) { ... }
+
+// Over mocking defaultFetcher in every test
+```
+
+For server action integration tests, use a **real test database** (see CLAUDE.md for Docker setup) rather than mocking Prisma.
+
 ## Assertions
 
-- One logical assertion per test (multiple `expect` calls OK if testing one concept)
-- Use specific matchers: `toEqual`, `toContain`, `toThrow`
-- Test behavior, not implementation
+- One logical concept per test; multiple `expect` calls are fine if they all verify the same thing
+- Use specific matchers: `toEqual`, `toContain`, `toThrow`, `toHaveBeenCalledWith`
+- Test behavior, not implementation details (internal state shape, private method calls)
 
-## Server Actions
+## What to Skip
 
-Test server actions by:
-1. Mocking Prisma client
-2. Calling action directly
-3. Asserting on return value and side effects
+- Third-party library behavior (trust `rrule`, Prisma, React)
+- Trivial pass-through getters/setters with no logic
+- Generated/boilerplate code (shadcn/ui components in `src/components/ui/`)
 
-## React Components
+## Running Tests
 
-- Use React Testing Library
-- Query by role, label, or text (not test IDs unless necessary)
-- Test user interactions, not internal state
+```bash
+npm test              # Run all tests once
+npm run test:watch    # Watch mode during development
+```
+
+All tests must pass before a feature is considered done. Run `npm test` as part of the review step.

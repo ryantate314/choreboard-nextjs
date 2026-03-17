@@ -15,7 +15,9 @@ import {
 import { useState, useEffect } from "react";
 
 function formatDate(date: Date): string {
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  // Dates from the server are UTC midnight; render in UTC so the displayed
+  // calendar date matches the intended day rather than the local equivalent.
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 }
 
 export default function SprintNav({ sprintStart }: { sprintStart: Date }) {

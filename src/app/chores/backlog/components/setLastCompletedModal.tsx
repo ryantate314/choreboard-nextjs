@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { quickComplete, BacklogChore } from "../../../actions/chores";
+import { localDateString, parseLocalDateInput } from "../../../dateUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,18 +20,14 @@ export interface SetLastCompletedModalProps {
 }
 
 export default function SetLastCompletedModal({ chore, closeModal }: SetLastCompletedModalProps) {
-  const [completedDate, setCompletedDate] = useState(() => {
-    const today = new Date();
-    return today.toISOString().split("T")[0];
-  });
+  const [completedDate, setCompletedDate] = useState(() => localDateString(new Date()));
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setIsSubmitting(true);
     
-    const date = new Date(completedDate);
-    date.setHours(12, 0, 0, 0);
+    const date = parseLocalDateInput(completedDate);
     
     await quickComplete(chore.id, date);
     closeModal();

@@ -12,7 +12,7 @@ import {
 } from "../../actions/chores";
 import { useState } from "react";
 import { RRule } from "rrule";
-import { formatRelativeTime } from "../../dateUtils";
+import { formatRelativeTime, addDays, localDateString, parseLocalDateInput } from "../../dateUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -91,11 +91,11 @@ export default function ChoreModal({ item, closeModal, showEditModal }: ChoreMod
   }
 
   function decrementCompletionDate() {
-    setCompletionDate(new Date(completionDate.getTime() - 24 * 60 * 60 * 1000));
+    setCompletionDate(addDays(completionDate, -1));
   }
 
   function incrementCompletionDate() {
-    setCompletionDate(new Date(completionDate.getTime() + 24 * 60 * 60 * 1000));
+    setCompletionDate(addDays(completionDate, 1));
   }
 
   return (
@@ -146,8 +146,8 @@ export default function ChoreModal({ item, closeModal, showEditModal }: ChoreMod
               <Input 
                 type="date" 
                 className="p-4" 
-                onChange={e => setCompletionDate(new Date(e.target.value))} 
-                value={completionDate.toISOString().slice(0, 10)} 
+                onChange={e => setCompletionDate(parseLocalDateInput(e.target.value))} 
+                value={localDateString(completionDate)} 
               />
             </div>
             <Button className="bg-green-600 hover:bg-green-700 p-4" onClick={incrementCompletionDate}>Next</Button>
